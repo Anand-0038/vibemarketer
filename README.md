@@ -80,6 +80,8 @@ small, verified phases.
   source of truth for idempotency, leases, retries, and provider outcomes.
 - The staged architecture and verification evidence are documented in
   [`docs/ZEROPS-HACK-PLAN.md`](docs/ZEROPS-HACK-PLAN.md).
+- The exact provider requirements and verification order are documented in
+  [`docs/PROVIDER-SETUP.md`](docs/PROVIDER-SETUP.md).
 - Live Zerops web deployment: [`web-2b24-3000.prg1.zerops.app`](https://web-2b24-3000.prg1.zerops.app)
 - Verified from outside the build environment: `/` and `/login` return `200`,
   `/app` redirects unauthenticated visitors to `/login`, static assets return

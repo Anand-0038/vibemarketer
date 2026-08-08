@@ -5,7 +5,7 @@ The repository contains two separate Zerops configuration layers:
 - `zerops-*-import.yaml` provisions the non-secret project services.
 - `zerops.yaml` builds and runs `web` and the private `worker`.
 
-## Required secret variables
+## Runtime secret variables
 
 Add these as Zerops secret variables in the project environment. Do not commit
 or paste their values into chat. This existing project is platform-managed with
@@ -16,13 +16,18 @@ configuration and are already pinned in `zerops.yaml`; they are not server
 secrets.
 
 ```text
-SUPABASE_SERVICE_ROLE_KEY
 INTERNAL_WORKER_SECRET
 ```
 
-For the complete real product flow, also configure the provider/research
-variables required by the chosen demo, such as `OPENAI_API_KEY`,
-`FIRECRAWL_API_KEY`, `SUPERMEMORY_API_KEY`, and `COMPOSIO_API_KEY`.
+`SUPABASE_SERVICE_ROLE_KEY` is an admin-only compatibility secret. Add it
+when using the existing billing, entitlement, waitlist, or other admin paths;
+the core Zerops marketing-store and Auth flow do not require it.
+
+For the complete real product flow, configure the exact provider gate in
+[`docs/PROVIDER-SETUP.md`](PROVIDER-SETUP.md). The minimum brand-to-draft
+flow needs `OPENAI_API_KEY`, `FIRECRAWL_API_KEY`, and
+`SUPERMEMORY_API_KEY`; provider-confirmed publishing additionally needs
+`COMPOSIO_API_KEY` and a connected social account.
 
 `DATABASE_URL` and `NATS_URL` are created in `zerops.yaml` from the private
 `db` and `nats` service references. The worker receives the NATS connection
