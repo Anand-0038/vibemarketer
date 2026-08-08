@@ -1,12 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useState } from "react";
-import {
-  signInWithPassword,
-  signUpWithPassword,
-  type AuthActionState,
-} from "@/app/login/actions";
+import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { SITE_EMAIL, siteUrl } from "@/lib/site";
 
@@ -19,18 +14,15 @@ export function AuthForm({
   mode,
   next = "/app",
   authReady,
+  initialError,
 }: {
   mode: Mode;
   next?: string;
   authReady: boolean;
+  initialError?: string;
 }) {
-  const emailAction = mode === "login" ? signInWithPassword : signUpWithPassword;
-  const [authState, emailFormAction, actionPending] = useActionState<
-    AuthActionState,
-    FormData
-  >(emailAction, {});
   const [googlePending, setGooglePending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(initialError ?? null);
 
   function callbackUrl(): string {
     const url = new URL(siteUrl("/auth/callback"));
@@ -39,7 +31,7 @@ export function AuthForm({
   }
 
   async function handleGoogle() {
-    if (!authReady || actionPending || googlePending) return;
+    if (!authReady || googlePending) return;
     setGooglePending(true);
     setError(null);
     try {
@@ -122,7 +114,7 @@ export function AuthForm({
             <button
               type="submit"
               className="btn-ghost focus-ring flex w-full items-center justify-center gap-2 text-base"
-              disabled={!authReady || googlePending || actionPending}
+              disabled={!authReady || googlePending}
             >
               <GoogleMark />
               {googlePending ? "Redirecting…" : "Continue with Google"}
@@ -136,8 +128,9 @@ export function AuthForm({
         </>
       ) : null}
 
-      <form method="post" action={emailFormAction} className="space-y-4">
+      <form method="post" action="/api/auth/email" className="space-y-4">
         <input type="hidden" name="next" value={next} />
+        <input type="hidden" name="mode" value={mode} />
         <div>
           <label htmlFor="email" className="section-label mb-2 block">
             Email
@@ -151,7 +144,7 @@ export function AuthForm({
             maxLength={254}
             className="input-field w-full"
             placeholder="you@company.com"
-            disabled={!authReady || actionPending || googlePending}
+            disabled={!authReady || googlePending}
           />
         </div>
         <div>
@@ -167,7 +160,7 @@ export function AuthForm({
             minLength={8}
             maxLength={72}
             className="input-field w-full"
-            disabled={!authReady || actionPending || googlePending}
+            disabled={!authReady || googlePending}
           />
         </div>
         {mode === "signup" ? (
@@ -184,34 +177,23 @@ export function AuthForm({
               minLength={8}
               maxLength={72}
               className="input-field w-full"
-              disabled={!authReady || actionPending || googlePending}
+              disabled={!authReady || googlePending}
             />
           </div>
         ) : null}
 
-        {error || authState.error ? (
+        {error ? (
           <p className="text-sm text-danger" role="alert">
-            {error || authState.error}
-          </p>
-        ) : null}
-        {authState.message ? (
-          <p className="text-sm text-accent" role="status">
-            {authState.message}
+            {error}
           </p>
         ) : null}
 
         <button
           type="submit"
           className="btn-primary focus-ring w-full text-base"
-          disabled={!authReady || actionPending || googlePending}
+          disabled={!authReady || googlePending}
         >
-          {actionPending
-            ? mode === "login"
-              ? "Signing in…"
-              : "Creating…"
-            : mode === "login"
-              ? "Sign in"
-              : "Create account"}
+          {mode === "login" ? "Sign in" : "Create account"}
         </button>
       </form>
           </div>

@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { signupErrorMessage, signupOutcome } from "./errors";
+import { authErrorMessage } from "./messages";
 
 assert.equal(
   signupOutcome({ hasSession: true }),
@@ -38,5 +39,9 @@ assert.equal(
   signupErrorMessage({ code: "user_already_exists" }),
   "Could not create account. Try again or sign in.",
 );
+
+assert.match(authErrorMessage("invalid") ?? "", /email or password/);
+assert.match(authErrorMessage("confirmation") ?? "", /email confirmation/);
+assert.equal(authErrorMessage(undefined), undefined);
 
 console.log("auth signup error mapping: ok");

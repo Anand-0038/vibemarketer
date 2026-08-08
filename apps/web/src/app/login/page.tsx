@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { AuthForm } from "@/components/AuthForm";
 import { getAuthUser } from "@/lib/auth";
+import { authErrorMessage } from "@/lib/auth/messages";
 import { isAuthConfigured, safeNextPath } from "@/lib/supabase/config";
 import { pageMetadata } from "@/lib/seo";
 
@@ -26,10 +27,15 @@ export default async function LoginPage({
     <>
       {sp.error ? (
         <p className="mx-auto max-w-md px-4 pt-8 text-sm text-danger" role="alert">
-          Sign-in failed. Try again.
+          {authErrorMessage(sp.error)}
         </p>
       ) : null}
-      <AuthForm mode="login" next={next} authReady={isAuthConfigured()} />
+      <AuthForm
+        mode="login"
+        next={next}
+        authReady={isAuthConfigured()}
+        initialError={authErrorMessage(sp.error)}
+      />
     </>
   );
 }
