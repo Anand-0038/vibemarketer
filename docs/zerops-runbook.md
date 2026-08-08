@@ -38,6 +38,22 @@ through ZCP, so this runbook uses a generated project-scoped
 `INTERNAL_WORKER_SECRET` and does not place it in the repository. The manifest
 still uses explicit cross-service database/NATS references.
 
+## Auth configuration for the live challenge URL
+
+The Supabase Auth project keeps the canonical `www.vibemarketer.fun` callback
+entries and now also allowlists:
+
+```text
+https://web-2b24-3000.prg1.zerops.app/auth/callback
+```
+
+The challenge environment currently uses Auth autoconfirm because Supabase's
+default shared mailer is restricted and is not a dependable delivery service
+for arbitrary signup addresses. This lets a real user create an account and
+continue to the protected app without pretending that an email was delivered.
+For a normal production release, set autoconfirm back to `false` and configure
+a custom SMTP provider before relying on email confirmation.
+
 ## Deploy
 
 ```bash
