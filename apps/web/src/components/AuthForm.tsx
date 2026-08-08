@@ -1,16 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useState, type FormEvent } from "react";
+import { signupErrorMessage, signupOutcome } from "@/lib/auth/errors";
 import {
-  signInWithGoogle,
-  signInWithPassword,
-  signUpWithPassword,
-  type AuthActionState,
-} from "@/app/login/actions";
-import { SITE_EMAIL } from "@/lib/site";
-
-const initial: AuthActionState = {};
+  normalizeEmail,
+  validateEmail,
+  validatePassword,
+} from "@/lib/auth/validation";
+import { createClient } from "@/lib/supabase/client";
+import { SITE_EMAIL, siteUrl } from "@/lib/site";
 
 type Mode = "login" | "signup";
 
@@ -26,15 +25,123 @@ export function AuthForm({
   next?: string;
   authReady: boolean;
 }) {
-  const action = mode === "login" ? signInWithPassword : signUpWithPassword;
-  const [state, formAction, pending] = useActionState(action, initial);
-  const [googleState, googleAction, googlePending] = useActionState(
-    signInWithGoogle,
-    initial,
-  );
+  const [pending, setPending] = useState(false);
+  const [googlePending, setGooglePending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
 
-  const error = state.error || googleState.error;
-  const message = state.message;
+  function callbackUrl(): string {
+    const url = new URL(siteUrl("/auth/callback"));
+    url.searchParams.set("next", next);
+    return url.toString();
+  }
+
+  async function handleEmailSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!authReady || pending || googlePending) return;
+
+    setPending(true);
+    setError(null);
+    setMessage(null);
+
+    const formData = new FormData(event.currentTarget);
+    const emailRaw = String(formData.get("email") ?? "");
+    const password = String(formData.get("password") ?? "");
+    const confirm = String(formData.get("confirm") ?? "");
+    const emailError = validateEmail(emailRaw);
+    const passwordError = validatePassword(password);
+
+    if (emailError || passwordError) {
+      setError(emailError ?? passwordError ?? "Invalid account details.");
+      setPending(false);
+      return;
+    }
+    if (mode === "signup" && password !== confirm) {
+      setError("Passwords do not match.");
+      setPending(false);
+      return;
+    }
+
+    try {
+      const supabase = createClient();
+      if (mode === "login") {
+        const { error: authError } = await supabase.auth.signInWithPassword({
+          email: normalizeEmail(emailRaw),
+          password,
+        });
+        if (authError) {
+          const code = (authError as { code?: string }).code ?? "";
+          const text = (authError.message || "").toLowerCase();
+          setError(
+            code === "email_not_confirmed" || text.includes("email not confirmed")
+              ? "This account still needs email confirmation. This challenge deployment does not rely on OTP delivery for new accounts; use a different address or ask the owner to configure SMTP."
+              : "Invalid email or password.",
+          );
+          return;
+        }
+        window.location.assign(next);
+        return;
+      }
+
+      const { data, error: authError } = await supabase.auth.signUp({
+        email: normalizeEmail(emailRaw),
+        password,
+        options: { emailRedirectTo: callbackUrl() },
+      });
+      if (authError) {
+        setError(signupErrorMessage(authError));
+        return;
+      }
+      if (data.session) {
+        window.location.assign(next);
+        return;
+      }
+
+      const outcome = signupOutcome({
+        hasSession: false,
+        identityCount: data.user?.identities?.length,
+      });
+      if (outcome?.kind === "existing_account") setError(outcome.message);
+      else {
+        setMessage(
+          outcome?.message ||
+            "Account created. Check your email to finish confirmation before signing in.",
+        );
+      }
+    } catch {
+      setError("Authentication is temporarily unavailable. Try again shortly.");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function handleGoogle() {
+    if (!authReady || pending || googlePending) return;
+    setGooglePending(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const supabase = createClient();
+      const { data, error: authError } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: callbackUrl(),
+          queryParams: { access_type: "offline", prompt: "consent" },
+        },
+      });
+      if (authError || !data.url) {
+        setError(
+          "Google sign-in isn’t available right now. Use email and password instead.",
+        );
+        return;
+      }
+      window.location.assign(data.url);
+    } catch {
+      setError("Google sign-in isn’t available right now. Use email and password instead.");
+    } finally {
+      setGooglePending(false);
+    }
+  }
 
   return (
     <section className="relative overflow-hidden border-b border-line">
@@ -63,9 +170,10 @@ export function AuthForm({
           </p>
           {mode === "signup" ? (
             <p className="mt-3 text-sm text-muted">
-              New accounts in this deployment activate immediately. If an older
-              account asks for confirmation and no message arrives, use a
-              different address or contact the service owner.
+              New accounts in this challenge deployment activate immediately —
+              judges do not need an OTP or inbox step. Older accounts may still
+              require confirmation; if no message arrives, use a different
+              address or contact the service owner.
             </p>
           ) : null}
 
@@ -88,8 +196,7 @@ export function AuthForm({
           <div className="panel mt-8 space-y-0 border-accent/20 p-6 sm:p-7">
       {googleOAuthEnabled ? (
         <>
-          <form action={googleAction}>
-            <input type="hidden" name="next" value={next} />
+          <form onSubmit={(event) => { event.preventDefault(); void handleGoogle(); }}>
             <button
               type="submit"
               className="btn-ghost focus-ring flex w-full items-center justify-center gap-2 text-base"
@@ -107,8 +214,7 @@ export function AuthForm({
         </>
       ) : null}
 
-      <form action={formAction} className="space-y-4">
-        <input type="hidden" name="next" value={next} />
+      <form onSubmit={(event) => void handleEmailSubmit(event)} className="space-y-4">
         <div>
           <label htmlFor="email" className="section-label mb-2 block">
             Email
@@ -122,7 +228,7 @@ export function AuthForm({
             maxLength={254}
             className="input-field w-full"
             placeholder="you@company.com"
-            disabled={!authReady || pending}
+            disabled={!authReady || pending || googlePending}
           />
         </div>
         <div>
@@ -138,7 +244,7 @@ export function AuthForm({
             minLength={8}
             maxLength={72}
             className="input-field w-full"
-            disabled={!authReady || pending}
+            disabled={!authReady || pending || googlePending}
           />
         </div>
         {mode === "signup" ? (
@@ -155,7 +261,7 @@ export function AuthForm({
               minLength={8}
               maxLength={72}
               className="input-field w-full"
-              disabled={!authReady || pending}
+              disabled={!authReady || pending || googlePending}
             />
           </div>
         ) : null}

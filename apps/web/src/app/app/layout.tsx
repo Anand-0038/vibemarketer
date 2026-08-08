@@ -15,6 +15,11 @@ export const metadata: Metadata = {
   },
 };
 
+// Every workspace route depends on the Supabase session cookie. Keep the
+// authenticated shell dynamic so a post-signup redirect cannot hit a route
+// that was incorrectly prerendered without request cookies.
+export const dynamic = "force-dynamic";
+
 export default async function AppLayout({ children }: {
   children: React.ReactNode;
 }) {

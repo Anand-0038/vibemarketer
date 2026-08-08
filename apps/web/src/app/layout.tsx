@@ -116,6 +116,11 @@ export const metadata: Metadata = {
   },
 };
 
+// The global navigation is personalized from the Supabase session cookie.
+// Keep the root shell request-rendered so static/error routes cannot switch to
+// dynamic rendering after a session is present.
+export const dynamic = "force-dynamic";
+
 export default async function RootLayout({
   children,
 }: Readonly<{

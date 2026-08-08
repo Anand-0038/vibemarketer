@@ -1,18 +1,17 @@
 # VibeMarketer
 
-## Cursor for marketing
+## Cursor for marketing — Zerops Challenge build
 
 Give VibeMarketer a product URL and its agent fleet builds brand memory,
 creates channel-native drafts, routes them through human approval, publishes
 through connected providers, and reports what actually happened.
 
-[Product website](https://www.vibemarketer.fun) · [Live application](https://web-2b24-3000.prg1.zerops.app) · [Source repository](https://github.com/Anand-0038/vibemarketer)
+[Live application](https://web-2b24-3000.prg1.zerops.app) · [Source repository](https://github.com/Anand-0038/vibemarketer)
 
-This is the active VibeMarketer codebase and hosted application, not a
-separate hackathon-only demo. It began as an experimental prototype and is
-being hardened into a durable multi-service SaaS: the product workflow stays
-the same while persistence, asynchronous publishing, private networking, and
-deployment verification have been made production-oriented.
+This repository is the working VibeMarketer submission for the WeMakeDevs
+Zerops Challenge: a multi-service SaaS that turns a founder's product URL into
+evidence-backed marketing work, with durable state, asynchronous execution,
+human approval, and honest provider outcomes.
 
 ## Product flow
 
@@ -24,8 +23,6 @@ deployment verification have been made production-oriented.
 6. Review execution records and campaign reports.
 
 Failed providers remain visibly unavailable. The product never substitutes fixtures, templates, or fake success for a failed live dependency.
-
-VC Brain (`/vc-brain`, `/app/radar`) is a secondary workflow built on the same evidence, memory, and agent engine.
 
 ## Product in the browser
 
@@ -120,6 +117,11 @@ corepack pnpm build
 
 Use `corepack pnpm test:engine` for the engine suite and `corepack pnpm test:content` for web content and pure-logic tests.
 
+The judge-verifiable product contract is documented in
+[`specs/marketing-loop.md`](specs/marketing-loop.md). The challenge release
+requirements and remaining human-controlled gates are tracked in
+[`docs/CHALLENGE-EVIDENCE-MAP.md`](docs/CHALLENGE-EVIDENCE-MAP.md).
+
 ## Live deployment
 
 The hosted release runs the product stack on Zerops in small, verified
@@ -157,12 +159,21 @@ durable queue, private worker network, health checks, and deployment surface.
   absent. Composio and a connected social account are still required before a
   provider-confirmed publication is claimed.
 
-## Challenge provenance
+### Judge smoke
 
-The WeMakeDevs Zerops Challenge is the context in which this existing product
-is being hardened and submitted. The challenge work is the infrastructure and
-reliability transformation around VibeMarketer, not a replacement product or
-a claim that the original prototype was created during the event.
+1. Open [`/signup`](https://web-2b24-3000.prg1.zerops.app/signup).
+2. Use a disposable email address and a password with at least eight
+   characters, including a letter and a number.
+3. Select **Create account**. New accounts are autoconfirmed in this
+   challenge deployment, so no OTP or inbox step is required; the app opens at
+   `/app/cmo`.
+4. Submit a public product URL, then follow the brand-memory, campaign, draft,
+   and HITL queue flow. Missing provider credentials remain visibly
+   unavailable instead of becoming fake success.
+
+Readiness can be checked without an account at
+[`/api/ready`](https://web-2b24-3000.prg1.zerops.app/api/ready), which should
+return HTTP `200` with `"status":"ready"`.
 
 ## Pricing
 

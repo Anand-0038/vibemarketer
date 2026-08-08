@@ -43,7 +43,7 @@ external authentication boundary.
 
 <!-- The public build-post URL. The best social post wins a Logitech MX Master 3. -->
 
-`https://…`
+`https://medium.com/@anandvashishtha/the-founders-new-problem-isn-t-building-it-s-being-heard-7651bc9cda1b`
 
 The prepared copy is in [`docs/SOCIAL-POST-DRAFT.md`](docs/SOCIAL-POST-DRAFT.md).
 The current core-flow recording is [`docs/demo/vibemarketer-core-demo.mp4`](docs/demo/vibemarketer-core-demo.mp4); the approval-boundary recording is [`docs/demo/vibemarketer-approval-boundary.mp4`](docs/demo/vibemarketer-approval-boundary.mp4).

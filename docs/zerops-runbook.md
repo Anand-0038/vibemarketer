@@ -63,6 +63,30 @@ are activated immediately and do not require an email. To provide real
 confirmation emails for arbitrary users, configure custom SMTP in the Supabase
 Auth settings and only then turn autoconfirm off.
 
+## Judge smoke path
+
+Use the public Zerops URL directly:
+
+1. Open `/signup`.
+2. Enter any disposable email address and a password of at least eight
+   characters containing a letter and a number.
+3. Select **Create account**. New accounts in the current challenge Auth
+   project are autoconfirmed and redirect to `/app/cmo`; no OTP or inbox step
+   is required.
+4. On a later visit, use `/login` with the same credentials. A confirmed
+   account redirects to `/app/cmo` after the Supabase token request succeeds.
+5. If the page reports that an older account needs confirmation, use a new
+   address for the judge smoke. Do not describe an email as delivered unless a
+   configured SMTP provider has actually returned delivery evidence.
+
+The public readiness check is:
+
+```bash
+curl -i https://web-2b24-3000.prg1.zerops.app/api/ready
+```
+
+It should return HTTP `200` and `"status":"ready"`.
+
 ## Deploy
 
 ```bash
@@ -86,9 +110,9 @@ zcli service push worker \
 Inspect build/runtime logs without printing environment values:
 
 ```bash
-zcli service log web --project-id IzGL13uGTKeL0Cg8qBNvjw --show-build-logs
-zcli service log web --project-id IzGL13uGTKeL0Cg8qBNvjw --limit 100
-zcli service log worker --project-id IzGL13uGTKeL0Cg8qBNvjw --limit 100
+zcli service log --service-id <web-service-id> --project-id IzGL13uGTKeL0Cg8qBNvjw --show-build-logs
+zcli service log --service-id <web-service-id> --project-id IzGL13uGTKeL0Cg8qBNvjw --limit 100
+zcli service log --service-id <worker-service-id> --project-id IzGL13uGTKeL0Cg8qBNvjw --limit 100
 ```
 
 The web checkpoint is live at

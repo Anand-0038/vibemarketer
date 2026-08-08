@@ -8,8 +8,10 @@ identifiers, or provider secrets.
 
 - Date: 2026-08-08 UTC
 - Repository: `https://github.com/Anand-0038/vibemarketer`
-- Verified deployed commit: `b39ea16`
-- Repository evidence commit: `b39ea16`
+- Verified deployed source: the Zerops web rollout completed at 2026-08-08
+  20:15 UTC from the working tree containing the authenticated-route and
+  browser-auth fixes. The final repository commit is recorded below after the
+  source changes are committed and redeployed.
 - Zerops URL: `https://web-2b24-3000.prg1.zerops.app`
 - Zerops project: `0xanand`
 - Active services: `web`, managed `db` PostgreSQL, `nats`, private `worker`
@@ -26,6 +28,25 @@ commit was deployed:
 | `GET /login` | HTTP 200 |
 | Unauthenticated `GET /app` | Expected redirect to `/login` |
 | Next static asset | HTTP 200 |
+
+## Auth browser smoke
+
+The public signup and login forms were exercised in a real headless Chrome
+session against the Zerops URL. The test addresses were disposable and were
+removed from Supabase Auth afterward.
+
+| Check | Result |
+| --- | --- |
+| New-account signup | Supabase Auth `/auth/v1/signup` HTTP 200 |
+| Signup destination | `/app/cmo`, authenticated workspace rendered |
+| Existing confirmed-account login | Supabase Auth `/auth/v1/token` HTTP 200 |
+| Login destination | `/app/cmo`, authenticated workspace rendered |
+| Email/OTP dependency | New challenge accounts use Auth autoconfirm; no inbox or OTP delivery is claimed |
+
+Judges can use any disposable email address, an eight-character password
+containing a letter and a number, and continue immediately. Older accounts
+created while email confirmation was enabled may still need confirmation; the
+UI reports that state instead of hanging on a spinner.
 
 ## Core product smoke
 

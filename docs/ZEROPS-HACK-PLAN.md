@@ -1,8 +1,8 @@
 # VibeMarketer — Zerops Challenge plan
 
-Status: Core URL-to-draft slice and judge demo assets live on Zerops;
-provider-confirmed publish, social post, and official submission remain open
-gates.
+Status: Core URL-to-draft slice and the web/database/NATS/private-worker
+boundaries are live on Zerops; provider-confirmed publish, social post, and
+official submission remain open gates.
 
 Audit date: 2026-08-08
 
@@ -144,7 +144,7 @@ available.
 - The project-local `.mcp.json` is tokenless setup metadata, not proof that
   ZCP can call the project.
 
-### The worker boundary is implemented but not live-verified
+### The worker boundary is implemented and live-verified at the infrastructure boundary
 
 - `apps/web/src/app/api/internal/publishing/drain/route.ts` remains the
   authenticated execution boundary and calls `executePublishOutboxBatch`.
@@ -156,7 +156,8 @@ available.
 - The worker and NATS contract are locally typechecked and tested. The live
   worker reaches NATS with explicit credentials, and its fallback drain checks
   are succeeding after the shared-secret restart. A provider-confirmed
-  attempt remains outstanding.
+  attempt remains outstanding; that is an external Composio/account gate, not
+  an unverified Zerops service boundary.
 
 ### Persistence migration and core live flow are verified
 
