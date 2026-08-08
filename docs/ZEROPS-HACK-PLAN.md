@@ -136,18 +136,18 @@ available.
 - The project-local `.mcp.json` is tokenless setup metadata, not proof that
   ZCP can call the project.
 
-### The worker is still an HTTP route inside the web service
+### The worker boundary is implemented but not live-verified
 
-- `apps/web/src/app/api/internal/publishing/drain/route.ts` calls
-  `executePublishOutboxBatch` directly from the Next.js runtime.
-- `GET` is shaped for Vercel Cron and uses the fallback lease owner
-  `vercel-cron`; `POST` is an authenticated internal caller path.
-- There is no separate worker process, NATS client, NATS subject, JetStream
-  consumer, or worker-specific deployment configuration.
-- The existing database outbox is durable, but Zerops currently provides no
-  job transport for the product. Adding NATS without a consumer and recovery
-  semantics would be decoration, so it is deferred until the worker boundary
-  is ready.
+- `apps/web/src/app/api/internal/publishing/drain/route.ts` remains the
+  authenticated execution boundary and calls `executePublishOutboxBatch`.
+- `apps/worker/src/index.ts` connects to NATS JetStream, consumes durable
+  wake-up messages, and calls that route over the private web hostname.
+- `apps/web/src/lib/publishing/nats-wakeup.ts` publishes a small wake-up only
+  after the PostgreSQL outbox is durable; a bounded poll remains the recovery
+  fallback when NATS is unavailable.
+- The worker and NATS contract are locally typechecked and tested. A live
+  Zerops worker connection and provider-confirmed attempt remain deployment
+  gates.
 
 ### Persistence migration is implemented but live verification is pending
 
@@ -227,7 +227,7 @@ worker restart does not erase a publish attempt.
 
 | Dependency | Current evidence | Migration treatment |
 | --- | --- | --- |
-| Vercel Cron | `apps/web/vercel.json`; drain `GET`; `CRON_SECRET` | Retain only as a compatibility fallback during the transition; replace with a private worker/NATS path before the final demo. |
+| Vercel Cron | `apps/web/vercel.json`; drain `GET`; `CRON_SECRET` | Retain only as a recovery-compatible fallback; Zerops worker/NATS is the intended primary path. |
 | Vercel runtime detection | `VERCEL` in `marketing-store.ts` | Add an explicit `ZEROPS` production marker and make production store selection independent of the hosting vendor. |
 | Vercel auth safety | `VERCEL_ENV` in `supabase/config.ts` | Treat `ZEROPS=1`/`ZEROPS_ENV=production` as hosted production and fail closed when Auth is not configured. |
 | Supabase Auth | `@supabase/ssr`, `supabase/server.ts`, `auth.ts`, auth callbacks/middleware | Keep for the hackathon unless a separate auth migration is proven safer. |
@@ -247,7 +247,9 @@ worker restart does not erase a publish attempt.
 Public web
   -> Zerops `web` Node.js service (existing Next.js app + API routes)
        |-> Supabase Auth (external, server-side/browser auth client)
-       `-> Supabase persistence (temporary baseline)
+       |-> Zerops `db` PostgreSQL (marketing state + publishing outbox)
+       |-> Zerops `nats` JetStream wake-up transport
+       `-> private Zerops `worker` service
 ```
 
 This phase is intentionally not the final infrastructure story. It proves the
@@ -296,9 +298,9 @@ retry, dead-letter, or require manual reconciliation.
 | Service | Required now? | Product reason |
 | --- | --- | --- |
 | `web` Node.js | Yes | Existing UI, auth callback, API, queue/HITL/report surfaces. |
-| `db` PostgreSQL | Phase 2 | Durable tenant-scoped marketing state and publishing execution records. |
-| `nats` | Phase 3 | Durable delivery of asynchronous publish work and worker restart recovery. |
-| `worker` Node.js | Phase 3 | Keeps provider calls and long-running jobs out of request-serving web containers. |
+| `db` PostgreSQL | Provisioned; live verification pending | Durable tenant-scoped marketing state and publishing execution records. |
+| `nats` | Provisioned; live verification pending | Durable delivery of asynchronous publish work and worker restart recovery. |
+| `worker` Node.js | Provisioned; live verification pending | Keeps asynchronous publishing dispatch out of the request-serving web path. |
 | object storage | No for MVP | Add only if generated assets need durable evidence; current core path can operate without it. |
 | Redis/Valkey/Qdrant | No | No current product requirement justifies them. |
 
@@ -306,10 +308,11 @@ retry, dead-letter, or require manual reconciliation.
 
 ### Baseline deployment files
 
-- `zerops.yaml` — root service build/run definition; start with `web`, then
-  add `worker` and managed-service references in later phases.
-- `zerops-import.yaml` — non-secret phase-1 infrastructure manifest for the
-  Zerops `web` Node.js service.
+- `zerops.yaml` — root service build/run definition for `web` and `worker`,
+  including private database, NATS, and worker-secret references.
+- `zerops-import.yaml`, `zerops-services-import.yaml`, and
+  `zerops-worker-import.yaml` — non-secret infrastructure manifests for the
+  provisioned Zerops services.
 - `.deployignore` — prevent local state, secrets, caches, and test artifacts
   from entering the deployment bundle.
 - `.env.example` — document `ZEROPS`, `DATABASE_URL`, NATS settings, and
@@ -328,19 +331,17 @@ retry, dead-letter, or require manual reconciliation.
   application persistence once the adapter is in place.
 - `apps/web/src/lib/publishing/publish-attempt-repo.ts` — add a PostgreSQL
   implementation while preserving the repository interface.
-- New `apps/web/src/lib/postgres/` modules — pool/configuration, migrations,
+- `apps/web/src/lib/zerops-postgres.ts` — pool/configuration, schema bootstrap,
   parameterized queries, owner scoping, and transaction helpers.
-- New `db/migrations/` or a clearly documented Zerops migration path —
-  marketing state, attempts, outbox, indexes, and lease functions without
-  Supabase-specific FKs.
-- Relevant tests beside `marketing-store`, publishing repository/service,
-  and a real local PostgreSQL integration test when a database is available.
+- `apps/web/src/lib/publishing/zerops-publish-attempt-repo.ts` — PostgreSQL
+  attempts/outbox adapter without Supabase-specific foreign keys.
+- Relevant tests beside `marketing-store`, publishing repository/service, and
+  a live PostgreSQL integration check after the Zerops service is deployed.
 
 ### Queue/worker phase
 
-- New `apps/worker/` (or `packages/publish-worker/`) — NATS connection,
-  JetStream durable consumer, bounded concurrency, shutdown handling, and
-  structured logs.
+- `apps/worker/` — NATS connection, JetStream durable consumer, bounded
+  wake-up handling, shutdown handling, and structured logs.
 - `apps/web/src/lib/publishing/publish-attempt-service.ts` — extract the
   provider-independent execution contract or move the shared execution core
   so web and worker do not duplicate state-machine logic.
@@ -348,8 +349,8 @@ retry, dead-letter, or require manual reconciliation.
   a guarded recovery/admin path; remove Vercel Cron as the primary dispatcher.
 - New queue contract module and tests — versioned payload, idempotency key,
   ack/nack behavior, redelivery, and poison-message handling.
-- `zerops.yaml` — add `worker`, `db`, and `nats` setup entries only after the
-  corresponding local checks pass.
+- `zerops.yaml` — already defines the `web` and `worker` setups; managed
+  `db`/`nats` are provisioned through the import manifests.
 
 ### Demo and documentation
 
@@ -672,7 +673,8 @@ confirmation.
 The Zerops account and challenge project are now authenticated and verified.
 Project `0xanand` (`IzGL13uGTKeL0Cg8qBNvjw`) is active, and its phase-1 `web`
 service (`tlq6CSlESEeBfHignulafg`) is `READY_TO_DEPLOY`. The remaining
-human-controlled setup must be completed without pasting secrets into chat:
+The remaining human-controlled setup must be completed without pasting
+secrets into chat:
 
 1. Add the real Supabase Auth URL, publishable key, and service-role key to
    the Zerops `web` service.
@@ -682,9 +684,8 @@ human-controlled setup must be completed without pasting secrets into chat:
 3. Push the `web` service with the root `zerops.yaml`.
 4. Read back build/runtime logs, enable the public subdomain only after a
    valid HTTP deployment, and verify the URL from outside Zerops.
-5. Add the later `db`, `nats`, and `worker` services only alongside their
-   working application boundaries; service count alone is not evidence of
-   meaningful Zerops usage.
+5. Push the private `worker`, verify its NATS connection and private drain
+   calls, then exercise one real approved publishing attempt.
 
 Until those steps return evidence, “Zerops is configured” means the account,
 project, service, and deployment definition are ready—not that the product is
@@ -745,3 +746,16 @@ provider secrets. The subdomain cannot be enabled before the service has a
 valid HTTP deployment. Add the real values as Zerops service
 secrets/variables, then run the first `zcli push`; no token or provider
 credential belongs in this repository or in chat.
+
+## Continuation evidence — 2026-08-08
+
+- The public source repository is `https://github.com/Anand-0038/vibemarketer`.
+- Local Git commits are authored as `Anand-0038`.
+- Zerops inventory currently contains active `db` and `nats` services plus
+  `READY_TO_DEPLOY` `web` and `worker` services.
+- The PostgreSQL marketing-store adapter, publishing-attempt adapter, NATS
+  wake-up publisher, and private worker are implemented and locally verified.
+- `corepack pnpm test:unit`, `corepack pnpm lint`, `corepack pnpm build`, and
+  the worker typecheck/build gates pass locally.
+- No public Zerops URL is claimed yet. A live deployment still requires the
+  real service secrets and public runtime checks described above.
