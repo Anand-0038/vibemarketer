@@ -771,3 +771,8 @@ in Zerops before the authenticated research/publishing demo can be claimed.
   provider-confirmed publish, the demo evidence, social post, and final
   submission form remain outstanding. No provider success is claimed without
   real credentials and a returned provider identifier.
+- The Zerops callback URL is now allowlisted in the external Supabase Auth
+  project. The challenge Auth configuration uses autoconfirm because the
+  default shared Supabase mailer is restricted to authorized team addresses;
+  a disposable real signup returned an immediate session and the test user
+  was deleted afterward. No email delivery is claimed from that smoke.
