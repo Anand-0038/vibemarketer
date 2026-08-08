@@ -44,7 +44,7 @@ zerops:
         DATABASE_URL: ${db_connectionString}
         NATS_URL: ${nats_connectionString}
         NATS_SUBJECT: marketing.publish.requested
-      start: corepack pnpm --filter web exec next start -p 3000
+      start: node apps/web/node_modules/next/dist/bin/next start -p 3000
       healthCheck:
         httpGet:
           port: 3000
@@ -71,4 +71,4 @@ zerops:
         NATS_DURABLE_CONSUMER: vibemarketer-publish-worker
         WEB_INTERNAL_URL: http://web:3000
         INTERNAL_WORKER_SECRET: ${web_INTERNAL_WORKER_SECRET}
-      start: corepack pnpm --filter worker start
+      start: node apps/worker/dist/index.js
