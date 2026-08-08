@@ -39,6 +39,7 @@ sqlite_mcp_server.db
 /.local/
 /.agents/
 /.codex/
+.claude/
 /agents/
 /.cursor/
 /.grok/
