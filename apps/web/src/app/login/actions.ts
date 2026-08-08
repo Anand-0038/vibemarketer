@@ -7,7 +7,10 @@ import {
   checkRateLimit,
   clientKeyFromHeaders,
 } from "@/lib/auth/rate-limit";
-import { signupErrorMessage } from "@/lib/auth/errors";
+import {
+  signupErrorMessage,
+  signupOutcome,
+} from "@/lib/auth/errors";
 import {
   normalizeEmail,
   validateEmail,
@@ -124,10 +127,15 @@ export async function signUpWithPassword(
     redirect(next);
   }
 
-  return {
-    message:
-      "Check your email to confirm your account, then sign in.",
-  };
+  const outcome = signupOutcome({
+    hasSession: false,
+    identityCount: data.user?.identities?.length,
+  });
+
+  if (!outcome) return {};
+  return outcome.kind === "existing_account"
+    ? { error: outcome.message }
+    : { message: outcome.message };
 }
 
 export async function signInWithGoogle(

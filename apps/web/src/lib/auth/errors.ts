@@ -4,6 +4,32 @@ type SupabaseAuthErrorLike = {
 } | null;
 
 /**
+ * Supabase intentionally returns an empty identity list for an address that
+ * already has an account when email confirmation is enabled. Keep that case
+ * out of the misleading "check your email" path.
+ */
+export function signupOutcome(input: {
+  hasSession: boolean;
+  identityCount?: number;
+}):
+  | { kind: "existing_account"; message: string }
+  | { kind: "confirmation"; message: string }
+  | undefined {
+  if (input.hasSession) return undefined;
+  if (input.identityCount === 0) {
+    return {
+      kind: "existing_account",
+      message:
+        "An account already exists for this email. Sign in instead, or use a different address.",
+    };
+  }
+  return {
+    kind: "confirmation",
+    message: "Check your email to confirm your account, then sign in.",
+  };
+}
+
+/**
  * Keep provider details out of the browser while making operational failures
  * actionable for the person trying to create an account.
  */

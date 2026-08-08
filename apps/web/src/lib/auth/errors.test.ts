@@ -1,5 +1,25 @@
 import assert from "node:assert/strict";
-import { signupErrorMessage } from "./errors";
+import { signupErrorMessage, signupOutcome } from "./errors";
+
+assert.equal(
+  signupOutcome({ hasSession: true }),
+  undefined,
+);
+assert.deepEqual(
+  signupOutcome({ hasSession: false, identityCount: 0 }),
+  {
+    kind: "existing_account",
+    message:
+      "An account already exists for this email. Sign in instead, or use a different address.",
+  },
+);
+assert.deepEqual(
+  signupOutcome({ hasSession: false, identityCount: 1 }),
+  {
+    kind: "confirmation",
+    message: "Check your email to confirm your account, then sign in.",
+  },
+);
 
 assert.match(
   signupErrorMessage({ code: "redirect_to_not_allowed" }),
