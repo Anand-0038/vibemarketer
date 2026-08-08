@@ -38,7 +38,7 @@ const STACK: StackItem[] = [
     href: "https://supermemory.ai/",
     role: "context and memory retrieval",
     status: "Optional",
-    statusNote: "brand memory; Supabase remains canonical investment DB",
+    statusNote: "optional retrieval layer; Zerops PostgreSQL stores live workspace state",
   },
   {
     name: "E2B",

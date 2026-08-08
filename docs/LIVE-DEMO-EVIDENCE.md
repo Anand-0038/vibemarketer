@@ -8,10 +8,11 @@ identifiers, or provider secrets.
 
 - Date: 2026-08-08 UTC
 - Repository: `https://github.com/Anand-0038/vibemarketer`
-- Verified web source commit: `df282af`
+- Verified web source commit: `5144e8e`
 - Verified worker/deployment-manifest commit: `4065282`
 - Zerops web rollout containing the verified web source completed at 2026-08-08
-  21:34 UTC; the public production gate passed 9/9 checks after rollout. The
+  22:02 UTC; the public production gate and browser auth checks were rerun after
+  rollout. The
   private worker rollout containing `4065282` completed at 21:43 UTC and
   started successfully with the pruned runtime bundle. The browser auth and
   product smoke recorded below was run against the same deployed auth and
@@ -30,8 +31,10 @@ commit was deployed:
 | `GET /api/ready` | HTTP 200, `ok=true`, `status=ready`, Auth configured/reachable, signup enabled, confirmation not required |
 | `GET /` | HTTP 200 |
 | `GET /login` | HTTP 200 |
+| `GET /signup` | HTTP 200 |
 | Unauthenticated `GET /app` | Expected redirect to `/login` |
 | Next static asset | HTTP 200 |
+| Unauthenticated `GET /api/marketing/posts` | HTTP 401; marketing state is private |
 | Unauthenticated `GET /api/internal/publishing/status` | HTTP 401; worker secret required |
 
 ## Auth browser smoke
@@ -45,8 +48,9 @@ retained in this record.
 | --- | --- |
 | New-account signup | Supabase Auth `/auth/v1/signup` HTTP 200 |
 | Signup destination | `/app/cmo`, authenticated workspace rendered |
+| Signout destination | `https://web-2b24-3000.prg1.zerops.app/login`; no internal `0.0.0.0` redirect |
 | Existing confirmed-account login | Supabase Auth `/auth/v1/token` HTTP 200 |
-| Login destination | `/app/cmo`, authenticated workspace rendered |
+| Login destination | `/app/cmo`, authenticated workspace rendered; `/api/marketing/posts` HTTP 200 |
 | Email/OTP dependency | New challenge accounts use Auth autoconfirm; no inbox or OTP delivery is claimed |
 
 Judges can use any disposable email address, an eight-character password
@@ -56,16 +60,17 @@ UI reports that state instead of hanging on a spinner.
 
 ## Core product smoke
 
-Using a disposable test account, the live flow completed and the temporary
-Auth user was removed afterward. The test did not expose the email address or
-session token in the evidence:
+Using a disposable `example.com` test account, the live flow completed. The
+test did not expose the email address, password, or session token in the
+evidence:
 
 ```text
 signup             HTTP 200
 POST /api/brand    HTTP 200  extraction=direct_http retrieval=zerops_postgres facts=10
 POST /api/campaign HTTP 200  source=openai+zerops_postgres days=7
 POST /api/draft    HTTP 200  source=openai+zerops_postgres drafts=3 pending
-Auth cleanup       HTTP 200
+GET /api/marketing/posts  HTTP 200  persisted tenant-owned posts=3
+POST /api/marketing/posts/:id/approve  HTTP 200  queue_denied/provider_not_connected; post=queued
 ```
 
 This proves the current challenge slice is a real URL-to-brand-to-campaign-

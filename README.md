@@ -151,9 +151,9 @@ durable queue, private worker network, health checks, and deployment surface.
 - The exact provider requirements and verification order are documented in
   [`docs/PROVIDER-SETUP.md`](docs/PROVIDER-SETUP.md).
 - Live Zerops web deployment: [`web-2b24-3000.prg1.zerops.app`](https://web-2b24-3000.prg1.zerops.app)
-- Verified from outside the build environment: `/` and `/login` return `200`,
-  `/app` redirects unauthenticated visitors to `/login`, static assets return
-  `200`, and `/api/ready` returns `{ "ok": true }`.
+- Verified from outside the build environment: `/`, `/login`, and `/signup`
+  return `200`, `/app` redirects unauthenticated visitors to `/login`, static
+  assets return `200`, and `/api/ready` returns `{ "ok": true }`.
 - The web runtime, managed PostgreSQL, NATS, and private worker services are
   active. The worker log shows a real NATS connection and successful private
   drain checks after the shared internal secret was activated.
@@ -170,7 +170,8 @@ durable queue, private worker network, health checks, and deployment surface.
 3. Select **Create account**. New accounts are autoconfirmed in this
    challenge deployment, so no OTP or inbox step is required; the app opens at
    `/app/cmo`.
-4. Submit a public product URL, then follow the brand-memory, campaign, draft,
+4. Sign out and sign back in once to verify the complete Auth session path.
+5. Submit a public product URL, then follow the brand-memory, campaign, draft,
    and HITL queue flow. Missing provider credentials remain visibly
    unavailable instead of becoming fake success.
 
