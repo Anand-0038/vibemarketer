@@ -2,7 +2,7 @@
 
 Cursor for marketing: give vibemarketer a product URL and its agents build brand memory, create multi-channel drafts, route them through human approval, publish through connected providers, and report the results.
 
-[Live product](https://www.vibemarketer.fun) · [Challenge repository](https://github.com/Anand-0038/vibemarketer)
+[Live Zerops deployment](https://web-2b24-3000.prg1.zerops.app) · [Existing product](https://www.vibemarketer.fun) · [Challenge repository](https://github.com/Anand-0038/vibemarketer)
 
 VibeMarketer existed as an experimental prototype before the challenge.
 During the WeMakeDevs Zerops Challenge, this repository is the working
@@ -80,8 +80,15 @@ small, verified phases.
   source of truth for idempotency, leases, retries, and provider outcomes.
 - The staged architecture and verification evidence are documented in
   [`docs/ZEROPS-HACK-PLAN.md`](docs/ZEROPS-HACK-PLAN.md).
-- No live Zerops URL is claimed until the project is authenticated, deployed,
-  and manually verified from outside the build environment.
+- Live Zerops web deployment: [`web-2b24-3000.prg1.zerops.app`](https://web-2b24-3000.prg1.zerops.app)
+- Verified from outside the build environment: `/` and `/login` return `200`,
+  `/app` redirects unauthenticated visitors to `/login`, static assets return
+  `200`, and `/api/ready` returns `{ "ok": true }`.
+- The web runtime, managed PostgreSQL, NATS, and private worker services are
+  active. The worker log shows a real NATS connection and successful private
+  drain checks after the shared internal secret was activated.
+- Real research/publishing provider secrets are not configured yet, so no
+  provider-confirmed campaign result is claimed.
 
 ## Pricing
 

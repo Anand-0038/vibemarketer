@@ -63,7 +63,8 @@ zcli service log worker --project-id IzGL13uGTKeL0Cg8qBNvjw --limit 100
 
 The web checkpoint is live at
 `https://web-2b24-3000.prg1.zerops.app`: `/` and `/login` return 200,
-`/app` remains protected, and `/api/ready` reports `{ "ok": true }`. The
-overall multi-service submission is not complete until the worker is deployed,
-its logs show a NATS connection, and the real provider path is verified. A
-`READY_TO_DEPLOY` service is not live-deployment evidence.
+`/app` remains protected, and `/api/ready` reports `{ "ok": true }`.
+The worker is deployed and its logs show a real NATS connection plus successful
+private drain checks. The overall multi-service submission is not complete
+until real provider credentials are added and one provider-confirmed flow is
+verified. A `READY_TO_DEPLOY` service is not live-deployment evidence.

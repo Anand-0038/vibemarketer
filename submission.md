@@ -37,7 +37,7 @@ external authentication boundary.
 
 <!-- The working public URL judges can open. -->
 
-`https://…`
+`https://web-2b24-3000.prg1.zerops.app`
 
 ### Social post
 
@@ -49,8 +49,8 @@ external authentication boundary.
 
 - [ ] Project title entered
 - [ ] Description entered
-- [ ] Repository URL is correct and judge-accessible
-- [ ] Live Zerops deployment is reachable
-- [ ] Deployment has the required architecture and is more than Hello World
+- [x] Repository URL is correct and judge-accessible
+- [x] Live Zerops deployment is reachable
+- [x] Deployment has the required architecture and is more than Hello World
 - [ ] Social build post is published
 - [ ] Official submission form is completed before the deadline

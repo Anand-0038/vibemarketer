@@ -151,8 +151,9 @@ available.
   after the PostgreSQL outbox is durable; a bounded poll remains the recovery
   fallback when NATS is unavailable.
 - The worker and NATS contract are locally typechecked and tested. The live
-  worker now reaches NATS with explicit credentials; the private drain still
-  needs a post-secret-restart confirmation and a provider-confirmed attempt.
+  worker reaches NATS with explicit credentials, and its fallback drain checks
+  are succeeding after the shared-secret restart. A provider-confirmed
+  attempt remains outstanding.
 
 ### Persistence migration is implemented but live verification is pending
 
@@ -305,7 +306,7 @@ retry, dead-letter, or require manual reconciliation.
 | `web` Node.js | Yes | Existing UI, auth callback, API, queue/HITL/report surfaces. |
 | `db` PostgreSQL | Provisioned; web readiness verified | Durable tenant-scoped marketing state and publishing execution records. |
 | `nats` | Provisioned; worker connection verified | Durable delivery of asynchronous publish work and worker restart recovery. |
-| `worker` Node.js | Active; private drain verification pending | Keeps asynchronous publishing dispatch out of the request-serving web path. |
+| `worker` Node.js | Active; NATS and private drain verified | Keeps asynchronous publishing dispatch out of the request-serving web path. |
 | object storage | No for MVP | Add only if generated assets need durable evidence; current core path can operate without it. |
 | Redis/Valkey/Qdrant | No | No current product requirement justifies them. |
 
@@ -676,26 +677,23 @@ confirmation.
 ## External setup still required
 
 The Zerops account and challenge project are now authenticated and verified.
-Project `0xanand` (`IzGL13uGTKeL0Cg8qBNvjw`) is active, and its phase-1 `web`
-service (`tlq6CSlESEeBfHignulafg`) is `READY_TO_DEPLOY`. The remaining
-The remaining human-controlled setup must be completed without pasting
-secrets into chat:
+Project `0xanand` (`IzGL13uGTKeL0Cg8qBNvjw`) is active. The `web`, `db`,
+`nats`, and `worker` services are active. The remaining human-controlled setup
+must be completed without pasting secrets into chat:
 
-1. Add the real Supabase Auth URL, publishable key, and service-role key to
-   the Zerops `web` service.
+1. Add the real Supabase service-role key to the Zerops project environment;
+   the browser-facing URL and publishable key are already public config in the
+   committed deployment definition.
 2. Add the real provider secrets required for the demonstrated workflow,
    starting with the existing OpenAI, research, memory, and publishing
    integrations that are actually used.
-3. Push the `web` service with the root `zerops.yaml`.
-4. Read back build/runtime logs, enable the public subdomain only after a
-   valid HTTP deployment, and verify the URL from outside Zerops.
-5. Restart/redeploy both runtimes after the generated shared internal secret is
-   active, verify the private drain call, then exercise one real approved
-   publishing attempt.
+3. Exercise one real URL-to-brand-memory/campaign flow on the live web app.
+4. Exercise one approved publishing attempt and verify the returned provider
+   identifier through the private worker.
 
-Until those steps return evidence, “Zerops is configured” means the account,
-project, service, and deployment definition are ready—not that the product is
-deployed or submission-ready.
+The Zerops deployment itself is already externally verified. Until the
+provider steps return evidence, the repository is not submission-ready for a
+provider-confirmed demo.
 
 ## Implementation log — 2026-08-08
 
@@ -739,7 +737,9 @@ headers, and canonical host redirect). That proves the current public
 deployment is healthy under the existing hosting setup; it does not prove
 that the application is deployed on Zerops.
 
-Zerops access is now authenticated. Read-only inventory found project
+Zerops access is now authenticated. The following is the initial pre-deploy
+inventory snapshot (the continuation evidence below is authoritative). Read-only
+inventory found project
 `0xanand` (`IzGL13uGTKeL0Cg8qBNvjw`, ACTIVE) with its existing `zcp` service.
 The phase-1 `web` Node.js service was then created from
 [`zerops-import.yaml`](../zerops-import.yaml) and verified as
@@ -766,8 +766,8 @@ in Zerops before the authenticated research/publishing demo can be claimed.
   wake-up publisher, and private worker are implemented and locally verified.
 - `corepack pnpm test:unit`, `corepack pnpm lint`, `corepack pnpm build`, and
   the worker typecheck/build gates pass locally.
-- The worker reached NATS with explicit credentials. The private drain must
-  still be rechecked after the project-scoped secret becomes the active runtime
-  value, followed by one provider-confirmed publish and the final submission
-  form. No provider success is claimed without real credentials and a returned
-  provider identifier.
+- The worker reached NATS with explicit credentials and its private fallback
+  drain checks are succeeding after the shared secret restart. One
+  provider-confirmed publish, the demo evidence, social post, and final
+  submission form remain outstanding. No provider success is claimed without
+  real credentials and a returned provider identifier.
