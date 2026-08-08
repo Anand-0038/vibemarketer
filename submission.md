@@ -45,6 +45,10 @@ external authentication boundary.
 
 `https://…`
 
+The prepared copy is in [`docs/SOCIAL-POST-DRAFT.md`](docs/SOCIAL-POST-DRAFT.md).
+Publish it only after the working video and provider-confirmed result URL are
+available.
+
 ## Final checks
 
 - [ ] Project title entered
