@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 
+import { request as httpRequest } from "node:http";
+import { request as httpsRequest } from "node:https";
+
 const DEFAULT_BASE_URL = "https://www.vibemarketer.fun";
 const MAX_RESPONSE_BYTES = 1_000_000;
 const REQUEST_TIMEOUT_MS = 20_000;
@@ -16,20 +19,77 @@ function resolveBaseUrl() {
   return url;
 }
 
-async function request(baseUrl, path) {
-  const response = await fetch(new URL(path, baseUrl), {
-    redirect: "manual",
-    headers: {
-      accept: "text/html,application/json;q=0.9,*/*;q=0.8",
-      "user-agent": "vibemarketer-production-gate/1.0",
-    },
-    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+function requestWithIpv4(url) {
+  return new Promise((resolve, reject) => {
+    const requestFn = url.protocol === "https:" ? httpsRequest : httpRequest;
+    const request = requestFn(
+      url,
+      {
+        family: 4,
+        headers: {
+          accept: "text/html,application/json;q=0.9,*/*;q=0.8",
+          "user-agent": "vibemarketer-production-gate/1.0",
+        },
+      },
+      (response) => {
+        const chunks = [];
+        let size = 0;
+        response.on("data", (chunk) => {
+          size += chunk.length;
+          if (size > MAX_RESPONSE_BYTES) {
+            request.destroy(new Error(`response exceeded ${MAX_RESPONSE_BYTES} bytes`));
+            return;
+          }
+          chunks.push(chunk);
+        });
+        response.on("end", () => {
+          const headers = new Headers();
+          for (const [name, value] of Object.entries(response.headers)) {
+            if (Array.isArray(value)) {
+              value.forEach((item) => headers.append(name, item));
+            } else if (value !== undefined) {
+              headers.set(name, String(value));
+            }
+          }
+          resolve({
+            response: { status: response.statusCode ?? 0, headers },
+            body: Buffer.concat(chunks).toString("utf8"),
+          });
+        });
+        response.on("error", reject);
+      },
+    );
+    request.setTimeout(REQUEST_TIMEOUT_MS, () => {
+      request.destroy(new Error("request timed out"));
+    });
+    request.on("error", reject);
+    request.end();
   });
+}
+
+async function request(baseUrl, path) {
+  const target = new URL(path, baseUrl);
+  let response;
+  let body;
+  try {
+    response = await fetch(target, {
+      redirect: "manual",
+      headers: {
+        accept: "text/html,application/json;q=0.9,*/*;q=0.8",
+        "user-agent": "vibemarketer-production-gate/1.0",
+      },
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    });
+    body = (await response.text()).slice(0, MAX_RESPONSE_BYTES + 1);
+  } catch {
+    // Some CI/build hosts have an unreachable IPv6 route while Zerops serves
+    // both A and AAAA records. Retry the same request with IPv4 explicitly.
+    ({ response, body } = await requestWithIpv4(target));
+  }
   const declaredLength = Number(response.headers.get("content-length") ?? 0);
   if (declaredLength > MAX_RESPONSE_BYTES) {
     throw new Error(`${path} response is too large (${declaredLength} bytes)`);
   }
-  const body = (await response.text()).slice(0, MAX_RESPONSE_BYTES + 1);
   if (body.length > MAX_RESPONSE_BYTES) {
     throw new Error(`${path} response exceeded ${MAX_RESPONSE_BYTES} bytes`);
   }

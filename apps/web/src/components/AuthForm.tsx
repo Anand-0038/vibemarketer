@@ -196,7 +196,7 @@ export function AuthForm({
           <div className="panel mt-8 space-y-0 border-accent/20 p-6 sm:p-7">
       {googleOAuthEnabled ? (
         <>
-          <form onSubmit={(event) => { event.preventDefault(); void handleGoogle(); }}>
+          <form method="post" onSubmit={(event) => { event.preventDefault(); void handleGoogle(); }}>
             <button
               type="submit"
               className="btn-ghost focus-ring flex w-full items-center justify-center gap-2 text-base"
@@ -214,7 +214,7 @@ export function AuthForm({
         </>
       ) : null}
 
-      <form onSubmit={(event) => void handleEmailSubmit(event)} className="space-y-4">
+      <form method="post" onSubmit={(event) => void handleEmailSubmit(event)} className="space-y-4">
         <div>
           <label htmlFor="email" className="section-label mb-2 block">
             Email
