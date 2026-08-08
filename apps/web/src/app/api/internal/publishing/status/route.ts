@@ -3,29 +3,17 @@ import { NextResponse } from "next/server";
 import { getSupabaseAdmin, hasSupabaseAdmin } from "@/lib/supabase-admin";
 import { authorizeWorkerRequest } from "@/lib/internal-worker-auth";
 import { MarketingStoreError } from "@/lib/marketing-store";
+import {
+  isZeropsPostgresConfigured,
+  zeropsQuery,
+} from "@/lib/zerops-postgres";
+import {
+  summarizePublishingStatus,
+  type PublishingAttemptStatusRow,
+  type PublishingOutboxStatusRow,
+} from "@/lib/publishing/status-summary";
 
 export const runtime = "nodejs";
-
-type AttemptRow = {
-  id: string;
-  provider: string;
-  status: string;
-  created_at: string;
-  updated_at: string;
-};
-
-type OutboxRow = {
-  attempt_id: string;
-  status: string;
-  created_at: string;
-  updated_at: string;
-  lease_owner: string | null;
-  lease_expires_at: string | null;
-};
-
-function parseStatus(raw: unknown): string {
-  return String(raw ?? "");
-}
 
 function unauthorized(message: string, status = 401) {
   return NextResponse.json({ error: message }, { status });
@@ -39,13 +27,98 @@ function ensureDb() {
   return sb;
 }
 
-function ageSeconds(iso: string): number {
-  const value = Date.now() - new Date(iso).getTime();
-  return Number.isFinite(value) ? Math.max(0, Math.floor(value / 1000)) : 0;
+function usesZeropsPostgres(): boolean {
+  const forced = process.env.MARKETING_STORE_BACKEND?.trim().toLowerCase();
+  if (forced === "zerops") {
+    if (!isZeropsPostgresConfigured()) {
+      throw new MarketingStoreError(
+        "MARKETING_STORE_BACKEND=zerops but DATABASE_URL is missing",
+        "MISCONFIGURED",
+        503,
+      );
+    }
+    return true;
+  }
+  if (forced === "supabase" || forced === "local") return false;
+
+  const isZeropsRuntime =
+    process.env.ZEROPS === "1" || process.env.ZEROPS_ENV === "production";
+  if (!isZeropsRuntime) return false;
+  if (!isZeropsPostgresConfigured()) {
+    throw new MarketingStoreError(
+      "Zerops production requires DATABASE_URL for publishing status",
+      "MISCONFIGURED",
+      503,
+    );
+  }
+  return true;
 }
 
-function inc(map: Record<string, number>, key: string) {
-  map[key] = (map[key] ?? 0) + 1;
+type StatusRows = {
+  attempts: PublishingAttemptStatusRow[];
+  jobs: PublishingOutboxStatusRow[];
+};
+
+async function readZeropsRows(): Promise<StatusRows> {
+  const [attempts, jobs] = await Promise.all([
+    zeropsQuery<PublishingAttemptStatusRow>(
+      `select provider, status, created_at::text, updated_at::text
+         from public.vibemarketer_publish_attempts
+        order by updated_at desc
+        limit 5000`,
+    ),
+    zeropsQuery<PublishingOutboxStatusRow>(
+      `select status, created_at::text, updated_at::text,
+              lease_owner, lease_expires_at::text
+         from public.vibemarketer_outbox_jobs
+        order by updated_at desc
+        limit 5000`,
+    ),
+  ]);
+
+  return { attempts: attempts.rows, jobs: jobs.rows };
+}
+
+async function readSupabaseRows(): Promise<StatusRows> {
+  const sb = ensureDb();
+  const attemptsRows = (await sb
+    .from("marketing_publish_attempts")
+    .select("provider,status,created_at,updated_at")
+    .order("updated_at", { ascending: false })
+    .limit(5000)) as {
+    data: PublishingAttemptStatusRow[];
+    error: { message?: string } | null;
+  };
+
+  if (attemptsRows.error) {
+    throw new MarketingStoreError(
+      `attempts query failed: ${attemptsRows.error.message ?? "db error"}`,
+      "UNAVAILABLE",
+      503,
+    );
+  }
+
+  const outboxRows = (await sb
+    .from("marketing_outbox_jobs")
+    .select("status,created_at,updated_at,lease_owner,lease_expires_at")
+    .order("updated_at", { ascending: false })
+    .limit(5000)) as {
+    data: PublishingOutboxStatusRow[];
+    error: { message?: string } | null;
+  };
+
+  if (outboxRows.error) {
+    throw new MarketingStoreError(
+      `outbox query failed: ${outboxRows.error.message ?? "db error"}`,
+      "UNAVAILABLE",
+      503,
+    );
+  }
+
+  return {
+    attempts: attemptsRows.data ?? [],
+    jobs: outboxRows.data ?? [],
+  };
 }
 
 export async function GET(req: Request) {
@@ -58,99 +131,15 @@ export async function GET(req: Request) {
     return unauthorized(authorization.error, authorization.status);
   }
 
-  const sb = ensureDb();
-
   try {
-    const attemptsRows = (await sb
-      .from("marketing_publish_attempts")
-      .select("id,provider,status,created_at,updated_at")
-      .order("updated_at", { ascending: false })
-      .limit(5000)) as { data: AttemptRow[]; error: { message?: string } | null };
-
-    if (attemptsRows.error) {
-      throw new MarketingStoreError(
-        `attempts query failed: ${attemptsRows.error.message ?? "db error"}`,
-        "UNAVAILABLE",
-        503,
-      );
-    }
-
-    const outboxRows = (await sb
-      .from("marketing_outbox_jobs")
-      .select(
-        "attempt_id,status,created_at,updated_at,lease_owner,lease_expires_at",
-      )
-      .order("updated_at", { ascending: false })
-      .limit(5000)) as {
-      data: OutboxRow[];
-      error: { message?: string } | null;
-    };
-
-    if (outboxRows.error) {
-      throw new MarketingStoreError(
-        `outbox query failed: ${outboxRows.error.message ?? "db error"}`,
-        "UNAVAILABLE",
-        503,
-      );
-    }
-
-    const attemptRows = attemptsRows.data ?? [];
-    const jobs = outboxRows.data ?? [];
-
-    const totals: Record<string, number> = {};
-    const providerTotals: Record<string, number> = {};
-    const attemptByStatus: Record<string, number> = {};
-
-    for (const a of attemptRows) {
-      const status = parseStatus(a.status);
-      inc(attemptByStatus, status);
-      inc(totals, "attempts");
-      inc(providerTotals, a.provider || "unknown");
-    }
-
-    const outboxByStatus: Record<string, number> = {};
-    for (const job of jobs) {
-      inc(outboxByStatus, parseStatus(job.status));
-      inc(totals, "jobs");
-    }
-
-    const leased = jobs.filter((job) => job.status === "leased");
-    const providerSucceededAttempts = attemptRows.filter(
-      (attempt) => attempt.status === "provider_succeeded",
-    );
-    const pendingOrRetryableJobs = jobs.filter((job) =>
-      job.status === "pending" || job.status === "retryable_failure",
-    );
-
-    const now = new Date().toISOString();
-
-    const oldestPendingAgeSec = pendingOrRetryableJobs.length
-      ? Math.min(...pendingOrRetryableJobs.map((job) => ageSeconds(job.created_at)))
-      : null;
-
-    const oldestLeasedAgeSec = leased.length
-      ? Math.min(...leased.map((job) => ageSeconds(job.created_at)))
-      : null;
-
-    const deadLettered = jobs.filter((job) => job.status === "dead_letter").length;
+    const rows = usesZeropsPostgres()
+      ? await readZeropsRows()
+      : await readSupabaseRows();
+    const summary = summarizePublishingStatus(rows.attempts, rows.jobs);
 
     const response = {
-      generated_at: now,
-      counts: {
-        total_attempts: totals.attempts ?? 0,
-        total_jobs: totals.jobs ?? 0,
-        attempt_by_status: attemptByStatus,
-        outbox_by_status: outboxByStatus,
-        provider_by_attempts: providerTotals,
-      },
-      queue_health: {
-        leased_jobs: leased.length,
-        provider_succeeded_not_finalized: providerSucceededAttempts.length,
-        pending_or_retryable_jobs: pendingOrRetryableJobs.length,
-        dead_lettered_jobs: deadLettered,
-        oldest_pending_age_seconds: oldestPendingAgeSec,
-        oldest_leased_age_seconds: oldestLeasedAgeSec,
-      },
+      generated_at: new Date().toISOString(),
+      ...summary,
       report_id: `ops-${randomUUID()}`,
     };
 
