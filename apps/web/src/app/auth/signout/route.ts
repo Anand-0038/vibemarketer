@@ -1,5 +1,6 @@
 import { revalidatePath } from "next/cache";
 import { type NextRequest, NextResponse } from "next/server";
+import { publicLoginUrl } from "@/lib/auth/redirects";
 import { isAuthConfigured } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
 
@@ -19,7 +20,10 @@ export async function POST(req: NextRequest) {
 
   revalidatePath("/", "layout");
 
-  const res = NextResponse.redirect(new URL("/login", req.url), {
+  // Zerops may expose an internal request origin (for example
+  // http://0.0.0.0:3000). Redirect to the configured public host so the
+  // browser does not leave the deployment's origin after signing out.
+  const res = NextResponse.redirect(publicLoginUrl(), {
     status: 302,
   });
 
