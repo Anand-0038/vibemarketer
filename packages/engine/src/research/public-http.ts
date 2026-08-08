@@ -63,6 +63,10 @@ export type PublicFetchResult = {
   errorCode?: "UNSAFE_URL" | "FETCH_FAILED";
 };
 
+export type PublicUrlValidation =
+  | { ok: true; url: string }
+  | { ok: false; url: string; error: string; errorCode: "UNSAFE_URL" };
+
 /**
  * Convert a bounded public HTML response into promptable text without adding
  * a DOM dependency to the worker/runtime. The response remains untrusted and
@@ -159,6 +163,27 @@ async function resolvePublicTarget(rawUrl: string | URL): Promise<PublicTarget> 
     address: selected.address,
     family: selected.family,
   };
+}
+
+/**
+ * Validate a user-supplied URL before handing it to any remote crawler.
+ * Firecrawl performs its own fetch, so the caller must not rely only on the
+ * local fetcher's later SSRF checks.
+ */
+export async function validatePublicHttpUrl(
+  rawUrl: string,
+): Promise<PublicUrlValidation> {
+  try {
+    const target = await resolvePublicTarget(rawUrl);
+    return { ok: true, url: target.url.toString() };
+  } catch (error) {
+    return {
+      ok: false,
+      url: rawUrl,
+      error: error instanceof Error ? error.message : "Unsafe public URL",
+      errorCode: "UNSAFE_URL",
+    };
+  }
 }
 
 function pinnedLookup(target: PublicTarget): LookupFunction {

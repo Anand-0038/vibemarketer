@@ -7,6 +7,7 @@ import {
   syncBrandMemory,
   tavilySearch,
   UNTRUSTED_SCRAPE_SYSTEM,
+  validatePublicHttpUrl,
   wrapUntrustedScrapedData,
   type BrandFact,
 } from "@vibe/engine";
@@ -146,7 +147,21 @@ export async function POST(req: Request) {
       );
     }
 
-    const disc = await discoverThenScrapeMarkdown(url);
+    // Validate before Firecrawl receives the URL. Firecrawl performs its own
+    // outbound fetch, so local direct-fetch SSRF checks are not sufficient.
+    const publicUrl = await validatePublicHttpUrl(url);
+    if (!publicUrl.ok) {
+      return NextResponse.json(
+        {
+          error:
+            "The product URL must resolve to a public HTTP(S) host. Private, local, credentialed, and non-standard-port URLs are not allowed.",
+          error_code: publicUrl.errorCode,
+        },
+        { status: 400 },
+      );
+    }
+
+    const disc = await discoverThenScrapeMarkdown(publicUrl.url);
     let sourceText = disc.markdown;
     let extractionProvider: "firecrawl" | "direct_http" = "firecrawl";
     let primaryUrl = disc.primaryUrl || url;

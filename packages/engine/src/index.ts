@@ -173,7 +173,9 @@ export {
   fetchPublicText,
   htmlToText,
   isPublicIpAddress,
+  validatePublicHttpUrl,
   type PublicFetchResult,
+  type PublicUrlValidation,
 } from "./research/public-http";
 
 export {
