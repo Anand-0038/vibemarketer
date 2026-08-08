@@ -1,0 +1,9 @@
+# Phase 2 infrastructure for VibeMarketer's durable marketing workflow.
+# Import this file into the existing Zerops project after the web service.
+services:
+  - hostname: db
+    type: postgresql:single@18
+    profile: oltp-staging
+
+  - hostname: nats
+    type: nats@2.12

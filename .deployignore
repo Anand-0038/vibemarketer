@@ -1,0 +1,25 @@
+# Secrets and local credentials must never enter a Zerops deployment bundle.
+.env
+.env.*
+!.env.example
+
+# Source-control and local build state.
+.git/
+.gitignore
+.pnpm-store/
+.next/cache/
+**/.next/cache/
+coverage/
+**/coverage/
+data/
+**/*.log
+
+# Local agent/editor state.
+.mcp.json
+.zcp/
+.agents/
+.codex/
+.cursor/
+.grok/
+.claude/
+plugins/

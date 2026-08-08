@@ -1,0 +1,7 @@
+# Phase 1 infrastructure for the existing VibeMarketer web application.
+# Application build/run behavior lives in the root zerops.yaml.
+services:
+  - hostname: web
+    type: nodejs@22
+    minContainers: 1
+    maxContainers: 1

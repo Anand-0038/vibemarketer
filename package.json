@@ -1,0 +1,30 @@
+{
+  "name": "thevibemarketing",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Cursor for marketing + VC Brain founder sourcing (distribution gravity, Trust, $100K decision-support)",
+  "scripts": {
+    "dev": "corepack pnpm --filter web dev",
+    "build": "corepack pnpm --filter web build",
+    "start": "corepack pnpm --filter web start",
+    "lint": "corepack pnpm --filter web lint",
+    "smoke": "corepack pnpm --filter @vibe/engine exec tsx src/scripts/smoke.ts",
+    "smoke:full": "corepack pnpm --filter @vibe/engine smoke",
+    "smoke:web": "corepack pnpm exec tsx packages/engine/src/scripts/web-smoke.ts",
+    "smoke:memory": "corepack pnpm exec tsx scripts/supermemory-smoke.ts",
+    "probe:keys": "corepack pnpm exec tsx scripts/probe-api-keys.ts",
+    "smoke:e2b": "corepack pnpm exec tsx scripts/e2b-forensics-smoke.ts",
+    "test": "corepack pnpm --filter @vibe/engine test && corepack pnpm --filter web test && corepack pnpm smoke:web",
+    "test:engine": "corepack pnpm --filter @vibe/engine test",
+    "test:content": "corepack pnpm --filter web test:content",
+    "test:worker": "corepack pnpm --filter worker test",
+    "test:unit": "corepack pnpm test:engine && corepack pnpm test:content && corepack pnpm test:worker"
+  },
+  "devDependencies": {
+    "tsx": "^4.20.0",
+    "typescript": "^5"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

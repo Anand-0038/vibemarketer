@@ -1,0 +1,73 @@
+# Zerops runtime definitions for the existing VibeMarketer SaaS.
+# Supabase Auth remains external for this hackathon slice. The managed
+# PostgreSQL service remains the next persistence migration boundary; NATS and
+# the private worker are wired to the durable publishing outbox.
+zerops:
+  - setup: web
+    build:
+      base: nodejs@22
+      envVariables:
+        # These markers make the build fail closed when Zerops secrets are not
+        # configured. NEXT_PUBLIC_SITE_URL and Supabase public Auth variables
+        # must be supplied as service/project variables in Zerops.
+        NODE_ENV: production
+        ZEROPS: "1"
+        ZEROPS_ENV: production
+        NEXT_PUBLIC_SITE_URL: https://web-2b24-3000.prg1.zerops.app
+        NEXT_PUBLIC_SUPABASE_URL: ${RUNTIME_NEXT_PUBLIC_SUPABASE_URL}
+        NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${RUNTIME_NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY}
+        NATS_URL: ${nats_connectionString}
+        NATS_SUBJECT: marketing.publish.requested
+      prepareCommands:
+        - corepack enable
+      buildCommands:
+        - corepack pnpm install --frozen-lockfile
+        - corepack pnpm --filter web build
+      # Next.js without output: standalone needs the workspace dependency
+      # graph, so the first deploy intentionally keeps the repository layout.
+      # We can narrow this after the first Zerops build has been inspected.
+      deployFiles: ./
+      cache: node_modules
+    run:
+      base: nodejs@22
+      ports:
+        - port: 3000
+          httpSupport: true
+      envVariables:
+        NODE_ENV: production
+        ZEROPS: "1"
+        ZEROPS_ENV: production
+        MARKETING_STORE_BACKEND: zerops
+        NEXT_PUBLIC_SITE_URL: https://web-2b24-3000.prg1.zerops.app
+        DATABASE_URL: ${db_connectionString}
+        NATS_URL: ${nats_connectionString}
+        NATS_SUBJECT: marketing.publish.requested
+      start: corepack pnpm --filter web exec next start -p 3000
+      healthCheck:
+        httpGet:
+          port: 3000
+          path: /api/ready
+
+  - setup: worker
+    build:
+      base: nodejs@22
+      prepareCommands:
+        - corepack enable
+      buildCommands:
+        - corepack pnpm install --frozen-lockfile
+        - corepack pnpm --filter worker build
+      deployFiles: ./
+      cache: node_modules
+    run:
+      base: nodejs@22
+      envVariables:
+        NODE_ENV: production
+        ZEROPS: "1"
+        ZEROPS_ENV: production
+        NATS_URL: ${nats_connectionString}
+        NATS_STREAM: VIBEMARKETER_MARKETING
+        NATS_SUBJECT: marketing.publish.requested
+        NATS_DURABLE_CONSUMER: vibemarketer-publish-worker
+        WEB_INTERNAL_URL: http://web:3000
+        INTERNAL_WORKER_SECRET: ${web_INTERNAL_WORKER_SECRET}
+      start: corepack pnpm --filter worker start

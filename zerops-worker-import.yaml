@@ -1,0 +1,7 @@
+# Private publishing worker. It has no public port; it reaches web through
+# Zerops' project network at http://web:3000.
+services:
+  - hostname: worker
+    type: nodejs@22
+    minContainers: 1
+    maxContainers: 1
