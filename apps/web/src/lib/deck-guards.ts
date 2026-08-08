@@ -1,3 +1,9 @@
+import { lookup } from "node:dns/promises";
+import { request as httpRequest } from "node:http";
+import { request as httpsRequest } from "node:https";
+import { isIP, type LookupFunction } from "node:net";
+import { isPublicIpAddress } from "@vibe/engine";
+
 /**
  * Pre-flight gates for inbound materials URLs and PDF uploads.
  * Blocks SSRF / wallet / timeout exploits before Firecrawl or storage work.
@@ -59,7 +65,10 @@ export type RemoteDeckPreflight = {
 };
 
 function isPrivateOrLocalHostname(hostname: string): boolean {
-  const h = hostname.toLowerCase().replace(/\.$/, "");
+  const h = hostname
+    .toLowerCase()
+    .replace(/^\[|\]$/g, "")
+    .replace(/\.$/, "");
   if (BLOCKED_HOSTS.has(h)) return true;
   if (h.endsWith(".localhost") || h.endsWith(".local") || h.endsWith(".internal")) {
     return true;
@@ -83,7 +92,13 @@ function isPrivateOrLocalHostname(hostname: string): boolean {
     if (h === "::1" || h.startsWith("fe80:") || h.startsWith("fc") || h.startsWith("fd")) {
       return true;
     }
+    // IPv4-mapped IPv6 literals must inherit the IPv4 private-range check.
+    if (h.startsWith("::ffff:") && !isPublicIpAddress(h.slice(7), 4)) {
+      return true;
+    }
   }
+  const family = isIP(h);
+  if (family && !isPublicIpAddress(h, family)) return true;
   return false;
 }
 
@@ -118,6 +133,98 @@ export function parseAllowedDeckUrl(raw: string): URL {
   return parsePublicMaterialsUrl(raw);
 }
 
+type ResolvedPublicAddress = {
+  address: string;
+  family: 4 | 6;
+};
+
+async function resolvePublicAddresses(
+  url: URL,
+): Promise<ResolvedPublicAddress[]> {
+  const hostname = url.hostname
+    .toLowerCase()
+    .replace(/^\[|\]$/g, "")
+    .replace(/\.$/, "");
+  const literalFamily = isIP(hostname);
+  const addresses = literalFamily
+    ? [{ address: hostname, family: literalFamily }]
+    : await lookup(hostname, { all: true, verbatim: true });
+
+  if (addresses.length === 0) {
+    throw new Error("URL host is not allowed: hostname could not be resolved");
+  }
+  if (
+    addresses.some(
+      ({ address, family }) => !isPublicIpAddress(address, family),
+    )
+  ) {
+    throw new Error(`URL host is not allowed: ${hostname}`);
+  }
+
+  return addresses.filter(
+    (address): address is ResolvedPublicAddress =>
+      address.family === 4 || address.family === 6,
+  );
+}
+
+function pinnedLookup(address: ResolvedPublicAddress): LookupFunction {
+  return (_hostname, options, callback) => {
+    if (options.all) {
+      callback(null, [{ address: address.address, family: address.family }]);
+      return;
+    }
+    callback(null, address.address, address.family);
+  };
+}
+
+type HeadResponse = {
+  status: number;
+  headers: Headers;
+  ok: boolean;
+};
+
+/** Resolve once and pin the socket so DNS rebinding cannot redirect the HEAD. */
+async function safeHead(url: URL): Promise<HeadResponse> {
+  const addresses = await resolvePublicAddresses(url);
+  const address = addresses[0];
+  if (!address) {
+    throw new Error(`URL host is not allowed: ${url.hostname}`);
+  }
+
+  const request = url.protocol === "https:" ? httpsRequest : httpRequest;
+  return new Promise((resolve, reject) => {
+    const req = request(
+      url,
+      {
+        method: "HEAD",
+        lookup: pinnedLookup(address),
+        headers: {
+          "User-Agent": "vibemarketer-materials-preflight/1.0",
+          Accept: "text/html,application/pdf,*/*",
+        },
+      },
+      (res) => {
+        const headers = new Headers();
+        for (const [name, value] of Object.entries(res.headers)) {
+          if (Array.isArray(value)) headers.set(name, value.join(", "));
+          else if (typeof value === "string") headers.set(name, value);
+        }
+        res.resume();
+        resolve({
+          status: res.statusCode ?? 0,
+          headers,
+          ok: (res.statusCode ?? 0) >= 200 && (res.statusCode ?? 0) < 300,
+        });
+      },
+    );
+    req.setTimeout(8_000, () => {
+      req.destroy(new Error("URL preflight timed out"));
+    });
+    req.once("error", reject);
+    req.end();
+  });
+}
+
 function looksLikePdf(url: URL, contentType: string | null): boolean {
   if (/\.pdf(\?|$)/i.test(url.pathname) || /\.pdf(\?|$)/i.test(url.toString())) {
     return true;
@@ -136,19 +243,13 @@ export async function preflightRemoteDeck(
 ): Promise<RemoteDeckPreflight> {
   try {
     let currentUrl = parsePublicMaterialsUrl(deckUrl);
-    const signal = AbortSignal.timeout(8_000);
-    let head: Response | null = null;
+    let head: HeadResponse | null = null;
 
     for (let redirects = 0; redirects <= MAX_REMOTE_REDIRECTS; redirects += 1) {
-      head = await fetch(currentUrl, {
-        method: "HEAD",
-        redirect: "manual",
-        signal,
-      });
+      head = await safeHead(currentUrl);
       if (head.status < 300 || head.status >= 400) break;
 
       const location = head.headers.get("location");
-      await head.body?.cancel();
       if (!location) throw new Error("URL redirect missing location");
       if (redirects === MAX_REMOTE_REDIRECTS) {
         throw new Error("URL has too many redirects");

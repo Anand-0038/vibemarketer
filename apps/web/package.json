@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "verify:production": "node scripts/production-gate.mjs",
-    "test:content": "tsx src/content/posts.test.ts && tsx src/content/plans.test.ts && tsx src/lib/seo-assets.test.ts && tsx src/lib/marketing-store-lifecycle.test.ts && tsx src/lib/marketing-report.test.ts && tsx src/lib/security-headers.test.ts && tsx src/lib/public-apply-admission.test.ts && tsx src/lib/internal-worker-auth.test.ts && tsx src/lib/zerops-runtime.test.ts && tsx src/lib/marketing-memory.test.ts && tsx src/lib/payments/feature-gates.test.ts && tsx src/lib/auth/errors.test.ts && tsx src/lib/publishing/publish-attempts.test.ts && tsx src/lib/publishing/publish-attempt-service.test.ts",
+    "test:content": "tsx src/content/posts.test.ts && tsx src/content/plans.test.ts && tsx src/lib/seo-assets.test.ts && tsx src/lib/deck-guards.test.ts && tsx src/lib/marketing-store-lifecycle.test.ts && tsx src/lib/marketing-report.test.ts && tsx src/lib/security-headers.test.ts && tsx src/lib/public-apply-admission.test.ts && tsx src/lib/internal-worker-auth.test.ts && tsx src/lib/zerops-runtime.test.ts && tsx src/lib/marketing-memory.test.ts && tsx src/lib/payments/feature-gates.test.ts && tsx src/lib/auth/errors.test.ts && tsx src/lib/publishing/publish-attempts.test.ts && tsx src/lib/publishing/publish-attempt-service.test.ts",
     "test:publishing:db": "tsx src/lib/publishing/publish-attempt-db.test.ts",
     "test": "pnpm test:content"
   },
