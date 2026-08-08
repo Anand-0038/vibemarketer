@@ -37,8 +37,10 @@ function redirectToAuth(
   return NextResponse.redirect(url, 303);
 }
 
-function redirectToNext(req: NextRequest, next: string): NextResponse {
-  return NextResponse.redirect(new URL(next, req.url), 303);
+function redirectToNext(next: string): NextResponse {
+  // Zerops can pass an internal 0.0.0.0 request origin to the runtime. Auth
+  // must return the browser to the configured public host instead.
+  return NextResponse.redirect(siteUrl(next), 303);
 }
 
 export async function POST(req: NextRequest) {
@@ -71,7 +73,7 @@ export async function POST(req: NextRequest) {
 
   // Create the response before the Supabase client so session cookies are
   // attached to the exact redirect response returned by this route handler.
-  const response = redirectToNext(req, next);
+  const response = redirectToNext(next);
   const cookieStore = await cookies();
   const supabase = createServerClient(
     getSupabaseUrl()!,
