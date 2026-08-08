@@ -11,6 +11,8 @@ Recorded core-flow walkthrough: [`demo/vibemarketer-core-demo.mp4`](demo/vibemar
 
 Approval-boundary walkthrough: [`demo/vibemarketer-approval-boundary.mp4`](demo/vibemarketer-approval-boundary.mp4)
 
+Combined judge walkthrough (85.76 seconds): [`demo/vibemarketer-judge-demo.mp4`](demo/vibemarketer-judge-demo.mp4)
+
 The verified core route is:
 
 ```text

@@ -1,8 +1,10 @@
 # VibeMarketer — Zerops Challenge plan
 
 Status: Core URL-to-draft slice and the web/database/NATS/private-worker
-boundaries are live on Zerops; provider-confirmed publish, social post, and
-official submission remain open gates.
+boundaries are live on Zerops, and the official challenge submission has been
+filed. Provider-confirmed publishing remains unverified; the submitted Medium
+URL is a product/problem essay and needs a separate build-post package if the
+social track is pursued.
 
 Audit date: 2026-08-08
 
@@ -51,8 +53,8 @@ The web checkpoint is live at
 `https://web-2b24-3000.prg1.zerops.app`; `/`, `/login`, `/app`, static assets,
 and `/api/ready` were verified externally. The worker is also provisioned and
 live-checked against NATS and the private drain boundary. The remaining
-deployment gate is a provider-confirmed publication with a real connected
-social account.
+external product-evidence gate is a provider-confirmed publication with a real
+connected social account.
 
 ## 1. What already works
 
@@ -486,8 +488,9 @@ provider-confirmed portion remains intentionally unclaimed until Composio and
 one connected social account return a real external identifier.
 
 The final demo should use only links and states that were verified after the
-last deployment. The public URL, repository, video, social post, and
-submission form remain separate submission requirements.
+last deployment. The public URL, repository, video, social post, and official
+form are separate submission artifacts; the form is now recorded as submitted
+in `submission.md`.
 
 ## 10. Ordered implementation checklist
 
@@ -680,10 +683,12 @@ When dependencies are installed and a local server can boot, add:
 corepack pnpm --filter web verify:production
 ```
 
-These commands prove local code behavior only. A final submission also needs
-live Zerops URL, service health/log evidence, authenticated product flow,
-provider response, public source, video, social post, and official form
-confirmation.
+These commands prove local code behavior only. The filed submission is backed
+by the live Zerops URL, service health/log evidence, authenticated product
+flow, public source, and committed demo video. A provider response remains an
+optional but valuable follow-up because no provider success is claimed without
+a real external identifier. The submitted Medium URL should be supplemented
+with the prepared build post if the social track is pursued.
 
 ## External setup still required
 
@@ -704,7 +709,7 @@ must be completed without pasting secrets into chat:
    identifier through the private worker.
 
 The Zerops deployment itself is already externally verified. Until the
-provider steps return evidence, the repository is not submission-ready for a
+provider steps return evidence, the repository is not ready to claim a
 provider-confirmed demo.
 
 ## Implementation log — 2026-08-08
@@ -779,11 +784,12 @@ in Zerops before the authenticated research/publishing demo can be claimed.
 - `corepack pnpm test:unit`, `corepack pnpm lint`, `corepack pnpm build`, and
   the worker typecheck/build gates pass locally.
 - The worker reached NATS with explicit credentials and its private fallback
-  drain checks are succeeding after the shared secret restart. The core and
-  approval-boundary demo recordings are now committed under `docs/demo/`.
-  One provider-confirmed publish, the social post, and final submission form
-  remain outstanding. No provider success is claimed without real credentials
-  and a returned provider identifier.
+  drain checks are succeeding after the shared secret restart. The core,
+  approval-boundary, and combined judge demo recordings are committed under
+  `docs/demo/`. One provider-confirmed publish remains outstanding, and the
+  submitted Medium URL should be supplemented with the prepared build post if
+  the social track is pursued. No provider success is claimed without real
+  credentials and a returned provider identifier.
 - The Zerops callback URL is now allowlisted in the external Supabase Auth
   project. The challenge Auth configuration uses autoconfirm because the
   default shared Supabase mailer is restricted to authorized team addresses;

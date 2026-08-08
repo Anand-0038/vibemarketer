@@ -30,6 +30,8 @@ verified; provider-confirmed publishing remains the final external gate.
 - [x] GitHub CLI authenticated to `Anand-0038`.
 - [x] Public submission repository `Anand-0038/vibemarketer` created and pushed.
 - [x] Recording workflow tested and core/approval recordings saved under `docs/demo/`.
+- [x] Official challenge submission page displayed `Submitted` after filing.
+- [ ] Submitted Medium URL replaced or supplemented with a complete build post for the social track.
 
 ## Local environment evidence
 
@@ -72,7 +74,7 @@ These require Anand's authenticated browser or account interaction:
 7. Keep `web` and `worker` deployed from the root `zerops.yaml`, inspect
    build/runtime logs with zCLI, and rerun the public smoke gate after every
    deployment.
-8. Test a simple screen-capture workflow using Chrome and FFmpeg. Do not record a product demo yet.
+8. Keep the committed demo recordings and publish a public build post with the required live URL, Zerops explanation, video, and tags if pursuing the social track.
 
 ## Verified official setup references
 

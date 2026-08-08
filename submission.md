@@ -1,8 +1,10 @@
 # The Zerops Challenge — Submission Draft
 
-**Status:** Local draft. This file is not an official submission.
+**Status:** Submitted. The official challenge page displayed `Submitted` after
+the entry was filed. This file is the repository-side record, not the form
+itself.
 
-## Before you submit
+## Submission record
 
 Read the full rules before filing. The following requirements determine whether the project can be judged:
 
@@ -45,19 +47,23 @@ external authentication boundary.
 
 `https://medium.com/@anandvashishtha/the-founders-new-problem-isn-t-building-it-s-being-heard-7651bc9cda1b`
 
-The prepared copy is in [`docs/SOCIAL-POST-DRAFT.md`](docs/SOCIAL-POST-DRAFT.md).
-The current core-flow recording is [`docs/demo/vibemarketer-core-demo.mp4`](docs/demo/vibemarketer-core-demo.mp4); the approval-boundary recording is [`docs/demo/vibemarketer-approval-boundary.mp4`](docs/demo/vibemarketer-approval-boundary.mp4).
-Publish the social post manually once the video is uploaded. A provider result
-may be added later, but must not be claimed until a real connected account
-returns an external identifier.
+The submitted URL points to the Medium article listed above. The prepared
+build-post copy is in [`docs/SOCIAL-POST-DRAFT.md`](docs/SOCIAL-POST-DRAFT.md).
+The current core-flow recording is [`docs/demo/vibemarketer-core-demo.mp4`](docs/demo/vibemarketer-core-demo.mp4); the approval-boundary recording is [`docs/demo/vibemarketer-approval-boundary.mp4`](docs/demo/vibemarketer-approval-boundary.mp4). The combined judge walkthrough is [`docs/demo/vibemarketer-judge-demo.mp4`](docs/demo/vibemarketer-judge-demo.mp4).
+The Medium article is a product/problem essay. Its visible text does not yet
+serve as the complete build-post package for the social prize; publish the
+prepared build post separately if that track is still being pursued. A
+provider result may be added later, but must not be claimed until a real
+connected account returns an external identifier.
 
 ## Final checks
 
-- [ ] Project title entered
-- [ ] Description entered
+- [x] Project title entered
+- [x] Description entered
 - [x] Repository URL is correct and judge-accessible
 - [x] Live Zerops deployment is reachable
 - [x] Deployment has the required architecture and is more than Hello World
 - [x] Core live URL → brand memory → campaign → draft smoke is verified
-- [ ] Social build post is published
-- [ ] Official submission form is completed before the deadline
+- [x] Social-post URL entered in the official form
+- [ ] Submitted URL is a complete build-post package for the social track
+- [x] Official submission form is completed; challenge page displayed `Submitted`

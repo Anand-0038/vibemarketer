@@ -122,6 +122,7 @@ The web checkpoint is live at
 `https://web-2b24-3000.prg1.zerops.app`: `/` and `/login` return 200,
 `/app` remains protected, and `/api/ready` reports `{ "ok": true }`.
 The worker is deployed and its logs show a real NATS connection plus successful
-private drain checks. The overall multi-service submission is not complete
-until real provider credentials are added and one provider-confirmed flow is
-verified. A `READY_TO_DEPLOY` service is not live-deployment evidence.
+private drain checks. The challenge submission has been filed; a real provider
+credential and provider-confirmed flow remain optional follow-up evidence, not
+something this repository claims without a returned external identifier. A
+`READY_TO_DEPLOY` service is not live-deployment evidence.

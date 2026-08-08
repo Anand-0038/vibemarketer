@@ -1,8 +1,11 @@
-# Social post draft
+# Build post draft — social-track follow-up
 
-This copy is ready for manual publication with the committed core-flow video.
+The official form has been filed, but the submitted Medium URL is a
+product/problem essay rather than a complete build post. This copy is ready
+for manual publication with the committed judge walkthrough video.
 Add a provider result only if a real connected account has returned one. The
-official post must be published manually and linked from `submission.md`.
+build post must contain the project name, product explanation, working video,
+live deployment, Zerops explanation, and the required organizer/sponsor tags.
 
 > A green deployment is not the same as a working marketing workflow.
 >
@@ -19,15 +22,17 @@ official post must be published manually and linked from `submission.md`.
 >
 > Live: https://web-2b24-3000.prg1.zerops.app
 > Repository: https://github.com/Anand-0038/vibemarketer
-> Demo video: https://github.com/Anand-0038/vibemarketer/raw/refs/heads/main/docs/demo/vibemarketer-core-demo.mp4
+> Demo video: https://github.com/Anand-0038/vibemarketer/raw/refs/heads/main/docs/demo/vibemarketer-judge-demo.mp4
 >
 > @WeMakeDevs @zeropsio
 > #ZeropsChallenge
 
 ## Before publishing
 
+- Keep the Medium essay as the product thesis/article; use this copy for the
+  actual build post so the two purposes are not conflated.
 - Show the failed or unavailable dependency honestly if it is still present.
-- Use the committed core-flow video now; replace it with a provider-confirmed
+- Use the committed judge walkthrough now; replace it with a provider-confirmed
   cut only after a real account returns a post ID.
 - Use a public video URL with captions and no private credentials in frame.
 - Copy the resulting post URL into `submission.md` after manual publication.

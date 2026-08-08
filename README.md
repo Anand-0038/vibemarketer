@@ -11,7 +11,7 @@ through connected providers, and reports what actually happened.
 This repository contains the current VibeMarketer product: a multi-service SaaS
 that turns a founder's product URL into evidence-backed marketing work, with
 durable state, asynchronous execution, human approval, and honest provider
-outcomes. Its current live release is also the build being submitted to the
+outcomes. This release is deployed on Zerops and is the build submitted to the
 WeMakeDevs Zerops Challenge.
 
 ## Product flow
@@ -146,6 +146,8 @@ durable queue, private worker network, health checks, and deployment surface.
   [`docs/demo/vibemarketer-core-demo.mp4`](docs/demo/vibemarketer-core-demo.mp4).
 - The approval-boundary recording shows durable queue intent and the honest
   no-provider outcome at [`docs/demo/vibemarketer-approval-boundary.mp4`](docs/demo/vibemarketer-approval-boundary.mp4).
+- The combined 86-second judge walkthrough is available at
+  [`docs/demo/vibemarketer-judge-demo.mp4`](docs/demo/vibemarketer-judge-demo.mp4).
 - The exact provider requirements and verification order are documented in
   [`docs/PROVIDER-SETUP.md`](docs/PROVIDER-SETUP.md).
 - Live Zerops web deployment: [`web-2b24-3000.prg1.zerops.app`](https://web-2b24-3000.prg1.zerops.app)

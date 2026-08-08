@@ -16,7 +16,7 @@ repository files, live behavior, and remaining human-controlled gates.
 
 | Organizer requirement | Evidence or owner | Status |
 | --- | --- | --- |
-| Solo project and one submission | `Anand-0038/vibemarketer`; human submission account | Human confirmation |
+| Solo project and one submission | `Anand-0038/vibemarketer`; official page displayed `Submitted` | Owner-confirmed |
 | Working application, not Hello World | URL-to-brand-memory-to-draft flow and `specs/marketing-loop.md` | Verified |
 | Meaningful Zerops usage | `zerops.yaml`, `README.md`, `docs/decisions.md`; web, PostgreSQL, NATS, private worker | Verified |
 | Reachable live deployment | `https://web-2b24-3000.prg1.zerops.app`; `/api/ready` | Verified |
@@ -26,9 +26,9 @@ repository files, live behavior, and remaining human-controlled gates.
 | Real provider confirmation | `docs/PROVIDER-SETUP.md`; Composio plus connected social account | Pending credentials/account |
 | Public source access | Public repository and visible commit history | Verified |
 | AI-use disclosure | `docs/ai-usage.md` | Verified |
-| Demo video | `docs/demo/` recordings | Verified for core and approval-boundary paths |
-| Public build post | `docs/SOCIAL-POST-DRAFT.md` | Human publication pending |
-| Official submission form | `submission.md` | Human submission pending |
+| Demo video | `docs/demo/` recordings, including the combined judge walkthrough | Verified for core and approval-boundary paths |
+| Public build post | Submitted Medium URL plus `docs/SOCIAL-POST-DRAFT.md` | URL submitted; build-post package needs follow-up |
+| Official submission form | `submission.md`; official page displayed `Submitted` | Owner-confirmed submitted |
 | Deployment remains live through judging | Zerops project and public URL | Human monitoring gate |
 
 ## Resource usage
@@ -48,7 +48,8 @@ repository files, live behavior, and remaining human-controlled gates.
 ## Release gate
 
 Do not submit a provider-confirmed publishing claim until a real connected
-account returns an external post identifier. The remaining manual sequence is:
+account returns an external post identifier. The remaining release follow-up
+sequence is:
 
 ```text
 add COMPOSIO_API_KEY in Zerops
@@ -56,6 +57,5 @@ add COMPOSIO_API_KEY in Zerops
   -> connect one real social account
   -> approve one draft
   -> verify provider URL/ID and report
-  -> publish the required build post
-  -> complete the official form
+  -> publish or update the required build post if pursuing the social track
 ```

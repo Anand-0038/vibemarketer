@@ -34,8 +34,9 @@ commit was deployed:
 ## Auth browser smoke
 
 The public signup and login forms were exercised in a real headless Chrome
-session against the Zerops URL. The test addresses were disposable and were
-removed from Supabase Auth afterward.
+session against the Zerops URL. The core smoke used a disposable account and
+removed it from Supabase Auth afterward; no password or session token is
+retained in this record.
 
 | Check | Result |
 | --- | --- |
@@ -94,14 +95,21 @@ provider identifier.
 The recorded browser evidence is
 [`demo/vibemarketer-approval-boundary.mp4`](demo/vibemarketer-approval-boundary.mp4).
 
-## Not yet verified
+The combined judge walkthrough is
+[`demo/vibemarketer-judge-demo.mp4`](demo/vibemarketer-judge-demo.mp4).
+
+## External follow-ups
 
 The following claims remain deliberately open:
 
 - Composio provider access with a connected LinkedIn, X, or Reddit account.
 - A provider-confirmed post ID/URL and execution report for a real social post.
-- The public build video and social post.
-- The official challenge submission form and confirmation.
+- The submitted Medium URL is a product/problem essay; a separate build-post
+  package containing the video, live URL, Zerops explanation, and required tags
+  is still needed for a defensible social-track claim.
+- The official challenge page displayed `Submitted` after the owner filed the
+  form; this is recorded as owner-confirmed rather than an independently
+  queried organizer API result.
 
 Do not describe the current deployment as having published a social post until
 the worker receives a real provider response and the returned identifier is
