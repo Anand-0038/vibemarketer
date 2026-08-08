@@ -87,9 +87,10 @@ available.
 
 - `apps/web/src/lib/marketing-store.ts` owns the marketing state contract:
   brand, facts, posts, loops, autonomy, campaign, usage, and publish log.
-- In production, the store selects Supabase and fails closed on missing
-  credentials or database errors. Local JSON is an explicit local/test mode,
-  not a production fallback.
+- On Zerops production, the store selects managed PostgreSQL and fails closed
+  on missing database configuration or database errors. Other production hosts
+  retain the Supabase compatibility path. Local JSON is an explicit local/test
+  mode, not a production fallback.
 - The store has versioned writes and compare-and-swap behavior for
   `marketing_state.version`.
 - Approval transitions a draft into the queue. The store rejects invalid

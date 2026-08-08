@@ -149,7 +149,7 @@ export const posts: Post[] = [
           {
             name: "Memory",
             detail:
-              "Brand core, semantic, and episodic memory from your site — multi-tenant, Supabase as production truth.",
+              "Brand core, semantic, and episodic memory from your site — multi-tenant, durable state on the selected production store.",
             accent: true,
           },
           {
@@ -167,7 +167,7 @@ export const posts: Post[] = [
       { type: "h2", text: "Persistence" },
       {
         type: "p",
-        text: "Production marketing state lives in Supabase per workspace. We do not invent analytics or mark posts published without a provider confirmation.",
+        text: "Production marketing state lives in Zerops PostgreSQL for the live deployment, with a Supabase compatibility path on other hosts. We do not invent analytics or mark posts published without a provider confirmation.",
       },
       {
         type: "mermaid",
