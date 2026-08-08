@@ -54,20 +54,20 @@ reports.
 
 ```mermaid
 flowchart LR
-    founder[Founder / browser] --> web[Next.js web app<br/>public application surface]
-    web --> auth[Supabase Auth<br/>sign-in and sessions only]
+    founder[Founder / browser] --> web[Next.js web app - public application surface]
+    web --> auth[Supabase Auth - sign-in and sessions only]
 
     subgraph zerops[Zerops project - private network]
-        web --> db[(Managed PostgreSQL<br/>marketing state + outbox)]
-        web --> nats[(NATS JetStream<br/>publish wake-ups)]
-        nats --> worker[Private Node.js worker<br/>drain + execution]
+        web --> db[(Managed PostgreSQL - marketing state and outbox)]
+        web --> nats[(NATS JetStream - publish wake-ups)]
+        nats --> worker[Private Node.js worker - drain and execution]
         worker --> db
         worker --> drain[Private publishing drain]
         drain --> web
     end
 
-    web --> research[Research and model providers<br/>Firecrawl - OpenAI - Supermemory]
-    worker --> publish[Composio + connected provider<br/>LinkedIn - X - Reddit]
+    web --> research[Research and model providers - Firecrawl - OpenAI - Supermemory]
+    worker --> publish[Composio and connected provider - LinkedIn - X - Reddit]
 ```
 
 ### Why Supabase is still in the repository
