@@ -71,10 +71,12 @@ Use the public Zerops URL directly:
 2. Enter any disposable email address and a password of at least eight
    characters containing a letter and a number.
 3. Select **Create account**. New accounts in the current challenge Auth
-   project are autoconfirmed and redirect to `/app/cmo`; no OTP or inbox step
-   is required.
+   project are autoconfirmed and redirect to `/app`; no OTP or inbox step is
+   required. The form uses the same-origin `/api/auth/email` POST, so judges
+   do not depend on client hydration or email delivery.
 4. On a later visit, use `/login` with the same credentials. A confirmed
-   account redirects to `/app/cmo` after the Supabase token request succeeds.
+   account redirects to `/app` after the server-side Supabase session exchange
+   succeeds.
 5. If the page reports that an older account needs confirmation, use a new
    address for the judge smoke. Do not describe an email as delivered unless a
    configured SMTP provider has actually returned delivery evidence.

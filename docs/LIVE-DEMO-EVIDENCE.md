@@ -34,6 +34,7 @@ commit was deployed:
 | Next static asset | HTTP 200 |
 | Unauthenticated `GET /api/marketing/posts` | HTTP 401; marketing state is private |
 | Unauthenticated `GET /api/internal/publishing/status` | HTTP 401; worker secret required |
+| `verify:production` against this URL | 10/10 checks passed, including email transport and security headers |
 
 ## Auth browser smoke
 
@@ -60,17 +61,17 @@ UI reports that state instead of hanging on a spinner.
 
 ## Core product smoke
 
-Using a disposable `example.com` test account, the live flow completed. The
-test did not expose the email address, password, or session token in the
-evidence:
+Using a disposable test account, the final rollout was exercised at 2026-08-08
+23:07 UTC. The test did not expose the email address, password, or session
+token in the evidence:
 
 ```text
 signup             HTTP 303 -> /app; authenticated session established
-POST /api/brand    HTTP 200  extraction=direct_http persistence=zerops_postgres
+POST /api/brand    HTTP 200  live extraction persistence=zerops_postgres
 POST /api/campaign HTTP 200  source=openai+zerops_postgres days=7
 POST /api/draft    HTTP 200  source=openai+zerops_postgres drafts=3 pending
-GET /api/marketing/posts  HTTP 200  persisted tenant-owned posts=3
-POST /api/marketing/posts/:id/approve  HTTP 200  queue_denied/provider_not_connected; post=queued
+GET /api/marketing/posts  HTTP 200  persisted tenant-owned posts=3 pending
+POST /api/marketing/posts/:id/approve  HTTP 200  post=queued; no provider confirmation claimed
 ```
 
 The latest rollout also rejected `POST /api/brand` with
