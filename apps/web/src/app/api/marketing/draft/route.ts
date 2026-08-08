@@ -23,6 +23,10 @@ import {
   type Platform,
   type Post,
 } from "@/lib/marketing-store";
+import {
+  hasStructuredBrandMemory,
+  memoryProviderFor,
+} from "@/lib/marketing-memory";
 import { withMarketingStore } from "@/lib/with-marketing";
 
 export const runtime = "nodejs";
@@ -211,11 +215,12 @@ export async function POST(req: Request) {
       );
     }
 
-    if (!isSupermemoryConfigured()) {
+    const structuredMemory = hasStructuredBrandMemory(brand);
+    if (!isSupermemoryConfigured() && !structuredMemory) {
       return NextResponse.json(
         {
           error:
-            "SUPERMEMORY_API_KEY required for retrieval-indexed drafts. Structured brand alone is not enough in production.",
+            "Brand memory is not ready. Complete onboarding or configure Supermemory for retrieval-backed drafts.",
         },
         { status: 502 },
       );
@@ -246,7 +251,7 @@ export async function POST(req: Request) {
         { status: 502 },
       );
     }
-    if (!recall.live) {
+    if (!recall.live && !structuredMemory) {
       return NextResponse.json(
         {
           error:
@@ -271,9 +276,11 @@ export async function POST(req: Request) {
       );
     }
     const drafts = ai.drafts;
+    const memoryProvider =
+      memoryProviderFor(brand, isSupermemoryConfigured()) || "brand-memory";
     const source = focus.platform
-      ? `openai+supermemory · day=${focus.day ?? "—"} · ${focus.platform}`
-      : "openai+supermemory";
+      ? `openai+${memoryProvider} · day=${focus.day ?? "—"} · ${focus.platform}`
+      : `openai+${memoryProvider}`;
     const autonomy = await store.getAutonomy();
 
     const created: Post[] = [];
@@ -351,13 +358,15 @@ export async function POST(req: Request) {
         layers: recall.layers,
         coreLines: recall.coreLines,
         contextLines: recall.contextLines,
-        live: recall.live,
+        live: recall.live || structuredMemory,
+        provider: memoryProvider,
       },
       supermemory: {
         configured: recall.configured,
         containerTag: recall.containerTag,
         contextLines: recall.contextLines,
         live: recall.live,
+        fallback: structuredMemory ? "zerops_postgres" : null,
       },
     });
   });

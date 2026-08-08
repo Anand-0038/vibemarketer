@@ -65,8 +65,9 @@ export type BrandContext = {
   description?: string | null;
   /** Evidence-backed brand facts. Pending facts require HITL before prompt truth. */
   facts?: BrandFact[];
-  /** Last SuperMemory sync metadata (retrieval index, not SoT). */
+  /** Last brand-memory sync metadata; the structured SoT remains this record. */
   memory?: {
+    provider?: "supermemory" | "zerops_postgres";
     container_tag: string;
     last_synced_at: string;
     fact_count: number;

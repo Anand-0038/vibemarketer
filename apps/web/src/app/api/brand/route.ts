@@ -1,6 +1,9 @@
 import {
   completeJsonDetailed,
   discoverThenScrapeMarkdown,
+  fetchPublicText,
+  htmlToText,
+  isSupermemoryConfigured,
   syncBrandMemory,
   tavilySearch,
   UNTRUSTED_SCRAPE_SYSTEM,
@@ -18,6 +21,7 @@ import {
   recordGeneration,
 } from "@/lib/marketing-approve";
 import { getMarketingStore, type BrandContext } from "@/lib/marketing-store";
+import { zeropsBrandMemoryMeta } from "@/lib/marketing-memory";
 import { normalizeHttpUrl } from "@/lib/url";
 import { withMarketingStore } from "@/lib/with-marketing";
 
@@ -39,6 +43,7 @@ function normalizeConfidence(value: unknown): number | null {
 function normalizeExtractedFacts(
   raw: unknown,
   evidenceUrl: string,
+  source: BrandFact["source"],
 ): BrandFact[] {
   if (!Array.isArray(raw)) return [];
   return raw
@@ -49,10 +54,10 @@ function normalizeExtractedFacts(
       const value = String(obj.value || obj.claim || "").trim();
       if (!label || !value) return null;
       return {
-        id: factId(["firecrawl", evidenceUrl, label, value]),
+        id: factId([source, evidenceUrl, label, value]),
         label: label.slice(0, 80),
         value: value.slice(0, 500),
-        source: "firecrawl",
+        source,
         evidence_url: evidenceUrl,
         confidence: normalizeConfidence(obj.confidence),
         status: "pending",
@@ -142,11 +147,30 @@ export async function POST(req: Request) {
     }
 
     const disc = await discoverThenScrapeMarkdown(url);
-    if (!disc.markdown) {
-      return NextResponse.json(
-        { error: "Live Firecrawl extraction is required to build brand memory. Check the Firecrawl key and the target URL." },
-        { status: 502 },
-      );
+    let sourceText = disc.markdown;
+    let extractionProvider: "firecrawl" | "direct_http" = "firecrawl";
+    let primaryUrl = disc.primaryUrl || url;
+
+    // Firecrawl is a richer optional extractor. The core product remains
+    // usable with the existing SSRF-safe public fetcher and real OpenAI
+    // extraction, while the source and limitation stay visible in the UI.
+    if (!sourceText) {
+      const direct = await fetchPublicText(url);
+      const readable = direct.ok ? htmlToText(direct.text) : "";
+      if (!direct.ok || readable.length < 120) {
+        return NextResponse.json(
+          {
+            error:
+              direct.error ||
+              "Could not read enough public text from the target URL. Check the URL and retry.",
+            extraction: "direct_http",
+          },
+          { status: 502 },
+        );
+      }
+      sourceText = readable;
+      extractionProvider = "direct_http";
+      primaryUrl = direct.url || url;
     }
 
     const schema = `{
@@ -166,7 +190,7 @@ export async function POST(req: Request) {
   ]
 }`;
     const extracted = await completeJsonDetailed(
-      `${wrapUntrustedScrapedData(disc.markdown)}\n\nExtract a concise, evidence-grounded brand profile for ${disc.primaryUrl || url}. Include a 2–4 sentence product description for a CMO dashboard, up to 5 competitor domains/names if mentioned, and 5–12 concrete brand facts visible in the source. Do not invent customers, traction, integrations, or claims not present in the source.`,
+      `${wrapUntrustedScrapedData(sourceText)}\n\nExtract a concise, evidence-grounded brand profile for ${primaryUrl}. Include a 2–4 sentence product description for a CMO dashboard, up to 5 competitor domains/names if mentioned, and 5–12 concrete brand facts visible in the source. Do not invent customers, traction, integrations, or claims not present in the source.`,
       schema,
       { system: `${UNTRUSTED_SCRAPE_SYSTEM}\nReturn JSON only matching the schema.` },
     );
@@ -208,10 +232,11 @@ export async function POST(req: Request) {
         : profile.oneliner.trim();
     const extractedFacts = normalizeExtractedFacts(
       (profile as { facts?: unknown }).facts,
-      disc.primaryUrl || url,
+      primaryUrl,
+      extractionProvider,
     );
     const draft = {
-      url: disc.primaryUrl || url,
+      url: primaryUrl,
       name: profile.name.trim(),
       oneliner: profile.oneliner.trim(),
       description,
@@ -229,11 +254,13 @@ export async function POST(req: Request) {
     ].slice(0, 40);
 
     const ownerId = currentOwnerId();
-    const memory = await syncBrandMemory(
-      toBrandMemoryInput({ ...draft, facts }, { markdown: disc.markdown }),
-      { ownerId },
-    );
-    if (!memory.factsOk || !memory.documentOk) {
+    const memory = isSupermemoryConfigured()
+      ? await syncBrandMemory(
+          toBrandMemoryInput({ ...draft, facts }, { markdown: sourceText }),
+          { ownerId },
+        )
+      : null;
+    if (memory && (!memory.factsOk || !memory.documentOk)) {
       const failedLayers = [
         !memory.factsOk ? "semantic facts" : null,
         !memory.documentOk ? "site document" : null,
@@ -247,22 +274,31 @@ export async function POST(req: Request) {
       );
     }
     const store = getMarketingStore();
+    const memoryMeta = memory
+      ? {
+          provider: "supermemory" as const,
+          container_tag: memory.containerTag,
+          last_synced_at: new Date().toISOString(),
+          fact_count: memory.factCount,
+        }
+      : zeropsBrandMemoryMeta({
+          ownerId,
+          brandName: draft.name,
+          factCount: facts.length,
+        });
     const brand = await store.setBrand({
       ...draft,
       facts,
-      memory: {
-        container_tag: memory.containerTag,
-        last_synced_at: new Date().toISOString(),
-        fact_count: memory.factCount,
-      },
+      memory: memoryMeta,
     });
 
     const meter = await recordGeneration("brand");
 
     return NextResponse.json({
       brand,
-      firecrawl: true,
-      primaryUrl: disc.primaryUrl,
+      firecrawl: extractionProvider === "firecrawl",
+      extraction: { provider: extractionProvider },
+      primaryUrl,
       mappedTargets: disc.targets.slice(0, 6),
       creditsHint: disc.creditsHint,
       research: {
@@ -280,11 +316,13 @@ export async function POST(req: Request) {
       meter: { used: meter.used, limit: meter.limit, remaining: meter.remaining },
       architecture: {
         source_of_truth: "marketing_state.brand",
-        retrieval: "supermemory",
-        container: memory.containerTag,
-        layers: memory.layers,
+        retrieval: memory ? "supermemory" : "zerops_postgres",
+        container: memoryMeta.container_tag,
+        layers: memory?.layers ?? { core: 7, semantic: facts.length },
       },
-      note: `Brand SoT saved + retrieval index synced (${memory.factCount} semantic facts → ${memory.containerTag}).`,
+      note: memory
+        ? `Brand SoT saved + retrieval index synced (${memory.factCount} semantic facts → ${memory.containerTag}).`
+        : `Brand SoT saved in Zerops PostgreSQL (${facts.length} evidence-backed facts; direct public HTTP extraction). Supermemory is optional enrichment.`,
     });
   } catch (e) {
     const { reportError } = await import("@/lib/errors");

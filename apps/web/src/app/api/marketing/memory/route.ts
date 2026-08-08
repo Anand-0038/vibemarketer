@@ -13,6 +13,10 @@ import {
   toBrandMemoryInput,
 } from "@/lib/brand-memory-context";
 import { getMarketingStore } from "@/lib/marketing-store";
+import {
+  hasStructuredBrandMemory,
+  memoryProviderFor,
+} from "@/lib/marketing-memory";
 import { withMarketingStore } from "@/lib/with-marketing";
 
 export const runtime = "nodejs";
@@ -46,6 +50,7 @@ export async function GET(req: Request) {
       ? (taskRaw as BrandRecallTask)
       : "general";
     const ownerId = currentOwnerId();
+    const provider = memoryProviderFor(brand, configured);
 
     if (!brand) {
       return NextResponse.json({
@@ -54,7 +59,7 @@ export async function GET(req: Request) {
         ownerId: ownerId.slice(0, 8) + "…",
         architecture: {
           source_of_truth: "marketing_state.brand",
-          retrieval: "supermemory",
+          retrieval: provider || "unconfigured",
           layers: ["core", "semantic", "episodic"],
         },
         note: "No brand yet — run onboarding first.",
@@ -87,15 +92,17 @@ export async function GET(req: Request) {
       dynamicFacts: recall.profile.dynamicFacts,
       hits: recall.search.hits,
       layers: recall.layers,
-      live: recall.configured && recall.contextLines.length > 0,
+      live: Boolean(provider && recall.contextLines.length > 0),
       architecture: {
         source_of_truth: "marketing_state.brand",
-        retrieval: "supermemory",
+        retrieval: provider || "unconfigured",
         multi_tenant: true,
         container: recall.containerTag,
       },
-      note: !configured
-        ? "SUPERMEMORY_API_KEY unset — core brand lines still available from SoT"
+      note: !configured && provider === "zerops_postgres"
+        ? "Structured brand memory is persisted in Zerops PostgreSQL; Supermemory is optional enrichment."
+        : !configured
+        ? "SUPERMEMORY_API_KEY unset — complete onboarding to create structured Zerops memory"
         : recall.contextLines.length
           ? "Layered recall: core (SoT) + SuperMemory semantic/episodic"
           : "Key set but empty index — POST sync or complete onboarding",
@@ -162,10 +169,20 @@ export async function POST(req: Request) {
       return NextResponse.json({ episode, ok: true });
     }
 
-    const sync = await syncBrandMemory(
-      toBrandMemoryInput(brand, { markdown: body.markdown }),
-      { ownerId },
-    );
+    const sync = isSupermemoryConfigured()
+      ? await syncBrandMemory(
+          toBrandMemoryInput(brand, { markdown: body.markdown }),
+          { ownerId },
+        )
+      : {
+          configured: false,
+          containerTag: brand.memory?.container_tag || "",
+          factsOk: hasStructuredBrandMemory(brand),
+          documentOk: false,
+          factCount: brand.facts?.length || 0,
+          layers: { core: 0, semantic: brand.facts?.length || 0 },
+          error: "Supermemory unavailable; structured brand memory is stored in Zerops PostgreSQL",
+        };
 
     if (sync.factsOk) {
       await store.setBrandMemoryMeta({
@@ -206,6 +223,9 @@ export async function POST(req: Request) {
         hitCount: recall.search.hits.length,
       },
       live: sync.factsOk,
+      memory_backend: isSupermemoryConfigured()
+        ? "supermemory"
+        : "zerops_postgres",
     });
   });
 }

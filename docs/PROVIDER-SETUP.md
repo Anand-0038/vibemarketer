@@ -9,13 +9,20 @@ their values into chat.
 
 | Variable | Used by | Required for |
 | --- | --- | --- |
-| `FIRECRAWL_API_KEY` | `POST /api/brand` | Read the submitted product URL and build evidence-backed brand facts |
+| `FIRECRAWL_API_KEY` | `POST /api/brand` | Optional richer map/markdown extraction |
 | `OPENAI_API_KEY` | brand extraction, campaign and drafts | Extract the brand profile and generate channel-native drafts |
-| `SUPERMEMORY_API_KEY` | brand sync and recall | Persist/retrieve the indexed brand memory used by drafts |
+| `SUPERMEMORY_API_KEY` | brand sync and recall | Optional semantic/episodic retrieval enrichment |
 
-`TAVILY_API_KEY` is optional enrichment for web-research facts. The core
-brand extraction path remains Firecrawl-backed and does not turn a missing
-Tavily response into invented research.
+The core live path does not fabricate a result when those optional providers
+are absent. It uses the engine's SSRF-safe public HTTP reader, OpenAI's
+evidence-grounded extraction, and the Zerops PostgreSQL structured brand
+record as the source used by campaign and draft prompts. Responses label this
+as `direct_http` + `zerops_postgres`; they do not claim Firecrawl or
+Supermemory ran. Configure the optional keys when richer crawling or semantic
+retrieval is available.
+
+`TAVILY_API_KEY` is optional enrichment for web-research facts. A missing
+Tavily response does not turn into invented research.
 
 ## Minimum provider-confirmed publish demo
 
@@ -47,8 +54,9 @@ After adding the secrets through Zerops, verify in this order:
 
 1. Open the public web URL and sign in with a real Supabase Auth account.
 2. Submit a real product URL through the brand-intake flow.
-3. Confirm Firecrawl, OpenAI, and Supermemory responses and inspect the saved
-   brand state after refresh.
+3. Confirm the direct HTTP or Firecrawl extraction, OpenAI response, and
+   Zerops PostgreSQL brand state after refresh. Supermemory is optional
+   enrichment and must only be described when it returned successfully.
 4. Generate a campaign and at least one draft; keep it in the HITL queue.
 5. Connect one social provider through Composio.
 6. Approve one draft, observe the NATS wake-up and private worker logs, and

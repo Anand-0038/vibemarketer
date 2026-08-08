@@ -63,6 +63,39 @@ export type PublicFetchResult = {
   errorCode?: "UNSAFE_URL" | "FETCH_FAILED";
 };
 
+/**
+ * Convert a bounded public HTML response into promptable text without adding
+ * a DOM dependency to the worker/runtime. The response remains untrusted and
+ * must still be wrapped with the prompt-injection boundary before an LLM sees
+ * it.
+ */
+export function htmlToText(input: string, maxChars = 24_000): string {
+  const text = input
+    .replace(/<!--(?:.|\n|\r)*?-->/g, " ")
+    .replace(/<(script|style|noscript|svg|template)\b[^>]*>(?:.|\n|\r)*?<\/\1>/gi, " ")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/(?:p|div|li|h[1-6]|section|article|main|header|footer|title|tr)>/gi, "\n")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&#(x[0-9a-f]+|[0-9]+);?/gi, (_match, value: string) => {
+      const code = value.toLowerCase().startsWith("x")
+        ? Number.parseInt(value.slice(1), 16)
+        : Number.parseInt(value, 10);
+      return Number.isFinite(code) ? String.fromCodePoint(Math.min(code, 0x10ffff)) : " ";
+    })
+    .replace(/&nbsp;?/gi, " ")
+    .replace(/&amp;?/gi, "&")
+    .replace(/&quot;?/gi, '"')
+    .replace(/&#39;?/gi, "'")
+    .replace(/&lt;?/gi, "<")
+    .replace(/&gt;?/gi, ">")
+    .replace(/[ \t\f\v]+/g, " ")
+    .replace(/[ \t]*\n[ \t]*/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+
+  return text.slice(0, maxChars);
+}
+
 export function isPublicIpAddress(address: string, family = isIP(address)): boolean {
   if (family !== 4 && family !== 6) return false;
   return !blockedAddresses.check(address, family === 4 ? "ipv4" : "ipv6");

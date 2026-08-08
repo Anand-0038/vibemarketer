@@ -213,8 +213,9 @@ export default function OnboardingPage() {
               placeholder="https://yourproduct.com or yourstartup.in"
             />
             <p className="mt-1 text-xs text-muted">
-              Public homepage. Firecrawl + model extract + SuperMemory required
-              for live brand memory.
+              Public homepage. We fetch it safely, extract with the live model,
+              and persist structured brand memory in Zerops PostgreSQL. Firecrawl
+              and Supermemory add richer enrichment when configured.
             </p>
           </div>
           <button type="submit" className="btn-primary focus-ring" disabled={busy}>

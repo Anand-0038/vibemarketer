@@ -52,7 +52,7 @@ export type BrandFact = {
   id: string;
   label: string;
   value: string;
-  source: "firecrawl" | "tavily" | "human" | "system";
+  source: "firecrawl" | "direct_http" | "tavily" | "human" | "system";
   evidence_url?: string | null;
   confidence?: number | null;
   status: BrandFactStatus;

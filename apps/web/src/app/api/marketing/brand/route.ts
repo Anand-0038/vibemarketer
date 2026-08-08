@@ -1,10 +1,11 @@
-import { syncBrandMemory } from "@vibe/engine";
+import { isSupermemoryConfigured, syncBrandMemory } from "@vibe/engine";
 import { NextResponse } from "next/server";
 import {
   currentOwnerId,
   toBrandMemoryInput,
 } from "@/lib/brand-memory-context";
 import { getMarketingStore, type BrandContext } from "@/lib/marketing-store";
+import { zeropsBrandMemoryMeta } from "@/lib/marketing-memory";
 import { normalizeHttpUrl } from "@/lib/url";
 import { withMarketingStore } from "@/lib/with-marketing";
 
@@ -58,26 +59,39 @@ export async function POST(req: Request) {
     };
 
     const ownerId = currentOwnerId();
-    const supermemory = await syncBrandMemory(toBrandMemoryInput(candidate), {
-      ownerId,
-    });
-    if (!supermemory.factsOk) {
+    const supermemory = isSupermemoryConfigured()
+      ? await syncBrandMemory(toBrandMemoryInput(candidate), { ownerId })
+      : null;
+    if (supermemory && !supermemory.factsOk) {
       return NextResponse.json(
         { error: `Live Supermemory sync failed: ${supermemory.error || "no facts persisted"}` },
         { status: 502 },
       );
     }
 
+    const memory = supermemory
+      ? {
+          provider: "supermemory" as const,
+          container_tag: supermemory.containerTag,
+          last_synced_at: new Date().toISOString(),
+          fact_count: supermemory.factCount,
+        }
+      : zeropsBrandMemoryMeta({
+          ownerId,
+          brandName: candidate.name,
+          factCount: 0,
+        });
+
     const store = getMarketingStore();
     const brand = await store.setBrand({
       ...candidate,
-      memory: {
-        container_tag: supermemory.containerTag,
-        last_synced_at: new Date().toISOString(),
-        fact_count: supermemory.factCount,
-      },
+      memory,
     });
 
-    return NextResponse.json({ brand, supermemory });
+    return NextResponse.json({
+      brand,
+      supermemory,
+      memory_backend: supermemory ? "supermemory" : "zerops_postgres",
+    });
   });
 }

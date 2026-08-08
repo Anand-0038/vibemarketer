@@ -15,7 +15,7 @@
   },
   "scripts": {
     "smoke": "tsx scripts/smoke.ts",
-    "test": "tsx src/scoring/gravity.test.ts && tsx src/scoring/screening.test.ts && tsx src/memory/brand-memory.test.ts && tsx src/connectors/reddit.test.ts && tsx src/connectors/composio.test.ts && tsx src/research/site-scorecard.test.ts && tsx src/research/synthesize.test.ts && tsx src/agents/agents-failclosed.test.ts",
+    "test": "tsx src/scoring/gravity.test.ts && tsx src/scoring/screening.test.ts && tsx src/memory/brand-memory.test.ts && tsx src/connectors/reddit.test.ts && tsx src/connectors/composio.test.ts && tsx src/research/site-scorecard.test.ts && tsx src/research/public-http.test.ts && tsx src/research/synthesize.test.ts && tsx src/agents/agents-failclosed.test.ts",
     "test:gravity": "tsx src/scoring/gravity.test.ts",
     "test:screening": "tsx src/scoring/screening.test.ts",
     "test:memory": "tsx src/memory/brand-memory.test.ts",

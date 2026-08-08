@@ -170,6 +170,13 @@ export {
 } from "./research/pagespeed";
 
 export {
+  fetchPublicText,
+  htmlToText,
+  isPublicIpAddress,
+  type PublicFetchResult,
+} from "./research/public-http";
+
+export {
   normalizeThesis,
   normalizeOwnershipTarget,
   ownershipToPercent,

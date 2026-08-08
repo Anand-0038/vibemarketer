@@ -144,8 +144,10 @@ durable queue, private worker network, health checks, and deployment surface.
 - The web runtime, managed PostgreSQL, NATS, and private worker services are
   active. The worker log shows a real NATS connection and successful private
   drain checks after the shared internal secret was activated.
-- Real research/publishing provider secrets are not configured yet, so no
-  provider-confirmed campaign result is claimed.
+- The core brand → campaign → draft path can use direct public HTTP extraction,
+  OpenAI, and Zerops PostgreSQL when Firecrawl/Supermemory enrichment keys are
+  absent. Composio and a connected social account are still required before a
+  provider-confirmed publication is claimed.
 
 ## Challenge provenance
 

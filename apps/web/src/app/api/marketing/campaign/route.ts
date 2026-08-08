@@ -22,6 +22,10 @@ import {
   type CampaignDay,
   type Platform,
 } from "@/lib/marketing-store";
+import {
+  hasStructuredBrandMemory,
+  memoryProviderFor,
+} from "@/lib/marketing-memory";
 import { withMarketingStore } from "@/lib/with-marketing";
 
 export const runtime = "nodejs";
@@ -61,11 +65,12 @@ export async function POST() {
         { status: 502 },
       );
     }
-    if (!isSupermemoryConfigured()) {
+    const structuredMemory = hasStructuredBrandMemory(brand);
+    if (!isSupermemoryConfigured() && !structuredMemory) {
       return NextResponse.json(
         {
           error:
-            "SUPERMEMORY_API_KEY required so the campaign uses retrieval-indexed brand memory.",
+            "Brand memory is not ready. Complete onboarding or configure Supermemory for retrieval-backed campaigns.",
         },
         { status: 502 },
       );
@@ -216,14 +221,14 @@ You are a practical CMO for indie SaaS. JSON only matching the schema.`,
       created_at: new Date().toISOString(),
       audience,
       days,
-      note: `${note} · source=openai+supermemory · drafts still HITL`,
+      note: `${note} · source=openai+${memoryProviderFor(brand, isSupermemoryConfigured()) || "brand-memory"} · drafts still HITL`,
     };
 
     const saved = await store.setCampaign(campaign);
     const meter = await recordGeneration("campaign");
     return NextResponse.json({
       campaign: saved,
-      source: "openai+supermemory",
+      source: `openai+${memoryProviderFor(brand, isSupermemoryConfigured()) || "brand-memory"}`,
       meter: {
         used: meter.used,
         limit: meter.limit,
@@ -232,6 +237,7 @@ You are a practical CMO for indie SaaS. JSON only matching the schema.`,
       memory: {
         containerTag: recall.containerTag,
         contextLines: recall.contextLines.length,
+        provider: memoryProviderFor(brand, isSupermemoryConfigured()),
       },
     });
   });
