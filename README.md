@@ -139,6 +139,8 @@ durable queue, private worker network, health checks, and deployment surface.
   [`docs/LIVE-DEMO-EVIDENCE.md`](docs/LIVE-DEMO-EVIDENCE.md).
 - The short judge walkthrough is scripted in
   [`docs/DEMO-SCRIPT.md`](docs/DEMO-SCRIPT.md).
+- A real 39-second core-flow recording is available at
+  [`docs/demo/vibemarketer-core-demo.mp4`](docs/demo/vibemarketer-core-demo.mp4).
 - The exact provider requirements and verification order are documented in
   [`docs/PROVIDER-SETUP.md`](docs/PROVIDER-SETUP.md).
 - Live Zerops web deployment: [`web-2b24-3000.prg1.zerops.app`](https://web-2b24-3000.prg1.zerops.app)

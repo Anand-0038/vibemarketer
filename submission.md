@@ -46,6 +46,7 @@ external authentication boundary.
 `https://…`
 
 The prepared copy is in [`docs/SOCIAL-POST-DRAFT.md`](docs/SOCIAL-POST-DRAFT.md).
+The current core-flow recording is [`docs/demo/vibemarketer-core-demo.mp4`](docs/demo/vibemarketer-core-demo.mp4).
 Publish it only after the working video and provider-confirmed result URL are
 available.
 

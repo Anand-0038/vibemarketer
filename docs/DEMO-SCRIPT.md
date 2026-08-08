@@ -7,6 +7,8 @@ show states verified after the latest deployment.
 
 Live application: <https://web-2b24-3000.prg1.zerops.app>
 
+Recorded core-flow walkthrough: [`demo/vibemarketer-core-demo.mp4`](demo/vibemarketer-core-demo.mp4)
+
 The verified core route is:
 
 ```text
