@@ -24,10 +24,12 @@ zerops:
       buildCommands:
         - corepack pnpm install --frozen-lockfile
         - corepack pnpm --filter web build
-      # Next.js without output: standalone needs the workspace dependency
-      # graph, so the first deploy intentionally keeps the repository layout.
-      # We can narrow this after the first Zerops build has been inspected.
-      deployFiles: ./
+      # Deploy only the standalone server and its static/public assets. This
+      # avoids installing packages in the runtime container.
+      deployFiles:
+        - apps/web/.next/standalone
+        - apps/web/.next/static
+        - apps/web/public
       cache: node_modules
     run:
       base: nodejs@22
@@ -44,9 +46,11 @@ zerops:
         DATABASE_URL: ${db_connectionString}
         NATS_URL: ${nats_connectionString}
         NATS_SUBJECT: marketing.publish.requested
-      # The build is emitted in apps/web/.next because this is a workspace
-      # deployment. Point Next at that app directory from the repository root.
-      start: node apps/web/node_modules/next/dist/bin/next start apps/web -p 3000
+      initCommands:
+        - mkdir -p apps/web/.next/standalone/apps/web/.next
+        - cp -R apps/web/.next/static apps/web/.next/standalone/apps/web/.next/static
+        - cp -R apps/web/public apps/web/.next/standalone/apps/web/public
+      start: node apps/web/.next/standalone/apps/web/server.js
       healthCheck:
         httpGet:
           port: 3000
