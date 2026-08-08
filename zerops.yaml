@@ -1,7 +1,9 @@
 # Zerops runtime definitions for the existing VibeMarketer SaaS.
-# Supabase Auth remains external for this hackathon slice. Managed PostgreSQL
-# stores marketing and publishing state; NATS and the private worker are wired
-# to the durable publishing outbox.
+# Supabase Auth remains external for this hackathon slice. Its URL and
+# publishable browser key are public client configuration from the existing
+# VibeMarketer Auth project; server-role/provider keys remain Zerops secrets.
+# Managed PostgreSQL stores marketing and publishing state; NATS and the
+# private worker are wired to the durable publishing outbox.
 zerops:
   - setup: web
     build:
@@ -14,8 +16,8 @@ zerops:
         ZEROPS: "1"
         ZEROPS_ENV: production
         NEXT_PUBLIC_SITE_URL: https://web-2b24-3000.prg1.zerops.app
-        NEXT_PUBLIC_SUPABASE_URL: ${RUNTIME_NEXT_PUBLIC_SUPABASE_URL}
-        NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${RUNTIME_NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY}
+        NEXT_PUBLIC_SUPABASE_URL: https://sdfahtxjywitbujjjlny.supabase.co
+        NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "sb_publishable_-7401vYmixYapr-8dIL_Ww_qaIpvGCn"
         NATS_URL: ${nats_connectionString}
         NATS_SUBJECT: marketing.publish.requested
       prepareCommands:
@@ -39,6 +41,8 @@ zerops:
         ZEROPS_ENV: production
         MARKETING_STORE_BACKEND: zerops
         NEXT_PUBLIC_SITE_URL: https://web-2b24-3000.prg1.zerops.app
+        NEXT_PUBLIC_SUPABASE_URL: https://sdfahtxjywitbujjjlny.supabase.co
+        NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "sb_publishable_-7401vYmixYapr-8dIL_Ww_qaIpvGCn"
         DATABASE_URL: ${db_connectionString}
         NATS_URL: ${nats_connectionString}
         NATS_SUBJECT: marketing.publish.requested
