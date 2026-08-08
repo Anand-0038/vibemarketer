@@ -25,6 +25,11 @@ variables required by the chosen demo, such as `OPENAI_API_KEY`,
 `db` and `nats` service references. The worker receives the NATS connection
 and the web internal secret reference from the same file.
 
+Before deploying, set the project environment isolation to `service` in the
+Zerops project settings. The manifest uses explicit cross-service references,
+so this keeps web-only provider secrets out of the worker while preserving the
+private database/NATS wiring.
+
 ## Deploy
 
 ```bash
