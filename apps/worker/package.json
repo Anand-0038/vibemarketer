@@ -4,6 +4,9 @@
   "private": true,
   "type": "module",
   "description": "Private VibeMarketer publishing worker for Zerops",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",

@@ -66,7 +66,10 @@ zerops:
       buildCommands:
         - corepack pnpm install --frozen-lockfile
         - corepack pnpm --filter worker build
-      deployFiles: ./
+        # Package only the worker's production files. The full monorepo is
+        # needed to build, but it is not needed in the private runtime.
+        - corepack pnpm --filter worker deploy --prod --legacy worker-runtime
+      deployFiles: ./worker-runtime/~
       cache: node_modules
     run:
       base: nodejs@22
@@ -80,4 +83,4 @@ zerops:
         NATS_SUBJECT: marketing.publish.requested
         NATS_DURABLE_CONSUMER: vibemarketer-publish-worker
         WEB_INTERNAL_URL: http://web:3000
-      start: node apps/worker/dist/index.js
+      start: node dist/index.js
