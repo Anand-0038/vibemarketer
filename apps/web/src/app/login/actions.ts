@@ -7,6 +7,7 @@ import {
   checkRateLimit,
   clientKeyFromHeaders,
 } from "@/lib/auth/rate-limit";
+import { signupErrorMessage } from "@/lib/auth/errors";
 import {
   normalizeEmail,
   validateEmail,
@@ -114,7 +115,7 @@ export async function signUpWithPassword(
 
   if (error) {
     // Generic message — avoid account enumeration.
-    return { error: "Could not create account. Try again or sign in." };
+    return { error: signupErrorMessage(error) };
   }
 
   // If email confirmations are off, session exists immediately.
