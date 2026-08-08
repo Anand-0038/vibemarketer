@@ -45,6 +45,8 @@ zerops:
         NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "sb_publishable_-7401vYmixYapr-8dIL_Ww_qaIpvGCn"
         DATABASE_URL: ${db_connectionString}
         NATS_URL: ${nats_connectionString}
+        NATS_USER: ${nats_user}
+        NATS_PASSWORD: ${nats_password}
         NATS_SUBJECT: marketing.publish.requested
       initCommands:
         - mkdir -p apps/web/.next/standalone/apps/web/.next
@@ -72,6 +74,8 @@ zerops:
         NODE_ENV: production
         ZEROPS: "1"
         NATS_URL: ${nats_connectionString}
+        NATS_USER: ${nats_user}
+        NATS_PASSWORD: ${nats_password}
         NATS_STREAM: VIBEMARKETER_MARKETING
         NATS_SUBJECT: marketing.publish.requested
         NATS_DURABLE_CONSUMER: vibemarketer-publish-worker

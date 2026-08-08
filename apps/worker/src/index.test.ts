@@ -9,9 +9,13 @@ import {
 
 const config = readWorkerConfig({
   NATS_URL: "nats://zerops:secret@nats:4222",
+  NATS_USER: "zerops",
+  NATS_PASSWORD: "secret",
   INTERNAL_WORKER_SECRET: "internal-secret",
 });
 
+assert.equal(config.natsUser, "zerops");
+assert.equal(config.natsPassword, "secret");
 assert.equal(config.streamName, DEFAULT_NATS_STREAM);
 assert.equal(config.subject, DEFAULT_NATS_SUBJECT);
 assert.equal(config.durableConsumer, DEFAULT_NATS_DURABLE_CONSUMER);

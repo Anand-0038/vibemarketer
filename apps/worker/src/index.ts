@@ -25,6 +25,8 @@ export type PublishWakeup = {
 
 export type WorkerConfig = {
   natsUrl: string;
+  natsUser?: string;
+  natsPassword?: string;
   webInternalUrl: string;
   internalWorkerSecret: string;
   streamName: string;
@@ -58,6 +60,8 @@ export function readWorkerConfig(
 ): WorkerConfig {
   return {
     natsUrl: requiredEnv(env, "NATS_URL"),
+    natsUser: env.NATS_USER?.trim() || undefined,
+    natsPassword: env.NATS_PASSWORD?.trim() || undefined,
     webInternalUrl:
       env.WEB_INTERNAL_URL?.trim() || DEFAULT_WEB_INTERNAL_URL,
     internalWorkerSecret: requiredEnv(env, "INTERNAL_WORKER_SECRET"),
@@ -72,6 +76,35 @@ export function readWorkerConfig(
     ),
     requestTimeoutMs: positiveInteger(env.WORKER_REQUEST_TIMEOUT_MS, 15_000),
   };
+}
+
+function natsAuthOptions(config: WorkerConfig): {
+  user?: string;
+  pass?: string;
+} {
+  if (config.natsUser && config.natsPassword) {
+    return { user: config.natsUser, pass: config.natsPassword };
+  }
+  return {};
+}
+
+function describeNatsEndpoint(config: WorkerConfig): Record<string, unknown> {
+  try {
+    const endpoint = new URL(config.natsUrl);
+    return {
+      scheme: endpoint.protocol.replace(":", ""),
+      hostname: endpoint.hostname,
+      port: endpoint.port || "4222",
+      url_has_username: Boolean(endpoint.username),
+      url_has_password: Boolean(endpoint.password),
+      explicit_credentials: Boolean(config.natsUser && config.natsPassword),
+    };
+  } catch {
+    return {
+      invalid_url: true,
+      explicit_credentials: Boolean(config.natsUser && config.natsPassword),
+    };
+  }
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -293,6 +326,7 @@ export class PublishingWorker {
 
   async run(): Promise<void> {
     this.startFallbackPoller();
+    logEvent("publishing_worker_nats_target", describeNatsEndpoint(this.config));
     let reconnectDelay = 1_000;
 
     while (!this.stopRequested) {
@@ -301,6 +335,7 @@ export class PublishingWorker {
           servers: this.config.natsUrl,
           maxReconnectAttempts: 3,
           reconnectTimeWait: 1_000,
+          ...natsAuthOptions(this.config),
         });
         this.connection = connection;
         await ensureJetStreamResources(connection, this.config);

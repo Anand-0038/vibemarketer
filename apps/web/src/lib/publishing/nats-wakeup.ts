@@ -17,11 +17,14 @@ const codec = StringCodec();
 
 async function getConnection(url: string): Promise<NatsConnection> {
   if (!connectionPromise) {
+    const user = process.env.NATS_USER?.trim();
+    const pass = process.env.NATS_PASSWORD?.trim();
     connectionPromise = connect({
       servers: url,
       maxReconnectAttempts: 2,
       reconnectTimeWait: 500,
       timeout: 1_500,
+      ...(user && pass ? { user, pass } : {}),
     }).catch((error) => {
       connectionPromise = null;
       throw error;
