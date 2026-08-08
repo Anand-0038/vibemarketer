@@ -8,15 +8,12 @@ identifiers, or provider secrets.
 
 - Date: 2026-08-08 UTC
 - Repository: `https://github.com/Anand-0038/vibemarketer`
-- Verified web source commit: `40c2c07`
+- Verified web source commit: `5954d78`
 - Verified worker/deployment-manifest commit: `4065282`
-- Zerops web rollout containing the verified web source completed at 2026-08-08
-  22:13 UTC; the public production gate and browser auth checks were rerun after
-  rollout. The
-  private worker rollout containing `4065282` completed at 21:43 UTC and
-  started successfully with the pruned runtime bundle. The browser auth and
-  product smoke recorded below was run against the same deployed auth and
-  marketing path.
+- Zerops web rollout containing `5954d78` completed at 2026-08-08 23:02:53
+  UTC; `/api/ready` returned `ready` at 23:02:56 UTC. The private worker
+  rollout containing `4065282` completed earlier at 21:43 UTC and started
+  successfully with the pruned runtime bundle.
 - Zerops URL: `https://web-2b24-3000.prg1.zerops.app`
 - Zerops project: `0xanand`
 - Active services: `web`, managed `db` PostgreSQL, `nats`, private `worker`
@@ -32,6 +29,7 @@ commit was deployed:
 | `GET /` | HTTP 200 |
 | `GET /login` | HTTP 200 |
 | `GET /signup` | HTTP 200 |
+| `POST /api/auth/email` with invalid fields | HTTP 303 to `/signup`; no email, password, or confirm field appears in the redirect URL |
 | Unauthenticated `GET /app` | Expected redirect to `/login` |
 | Next static asset | HTTP 200 |
 | Unauthenticated `GET /api/marketing/posts` | HTTP 401; marketing state is private |
@@ -40,17 +38,19 @@ commit was deployed:
 ## Auth browser smoke
 
 The public signup and login forms were exercised in a real headless Chrome
-session against the Zerops URL. The core smoke used a disposable account and
-removed it from Supabase Auth afterward; no password or session token is
-retained in this record.
+session against the Zerops URL. The email form now uses a same-origin native
+POST to `/api/auth/email`; this avoids the Server Action transport that
+returned a platform 502 on the Zerops runtime. Disposable test accounts were
+used for verification; no password or session token is retained in this
+record.
 
 | Check | Result |
 | --- | --- |
-| New-account signup | Supabase Auth `/auth/v1/signup` HTTP 200 |
-| Signup destination | `/app/cmo`, authenticated workspace rendered |
+| New-account signup | Native form → `/api/auth/email` HTTP 303; Supabase session cookies returned; browser reached `/app` |
+| Signup destination | `/app`, authenticated workspace rendered; `/api/marketing/posts` HTTP 200 |
 | Signout destination | `https://web-2b24-3000.prg1.zerops.app/login`; no internal `0.0.0.0` redirect |
-| Existing confirmed-account login | Supabase Auth `/auth/v1/token` HTTP 200 |
-| Login destination | `/app/cmo`, authenticated workspace rendered; `/api/marketing/posts` HTTP 200 |
+| Existing confirmed-account login | Native form → `/api/auth/email` HTTP 303; session cookie returned |
+| Login destination | `/app`, authenticated workspace rendered; `/api/marketing/posts` HTTP 200 |
 | Email/OTP dependency | New challenge accounts use Auth autoconfirm; no inbox or OTP delivery is claimed |
 
 Judges can use any disposable email address, an eight-character password
@@ -65,13 +65,18 @@ test did not expose the email address, password, or session token in the
 evidence:
 
 ```text
-signup             HTTP 200
-POST /api/brand    HTTP 200  extraction=direct_http retrieval=zerops_postgres facts=10
+signup             HTTP 303 -> /app; authenticated session established
+POST /api/brand    HTTP 200  extraction=direct_http persistence=zerops_postgres
 POST /api/campaign HTTP 200  source=openai+zerops_postgres days=7
 POST /api/draft    HTTP 200  source=openai+zerops_postgres drafts=3 pending
 GET /api/marketing/posts  HTTP 200  persisted tenant-owned posts=3
 POST /api/marketing/posts/:id/approve  HTTP 200  queue_denied/provider_not_connected; post=queued
 ```
+
+The latest rollout also rejected `POST /api/brand` with
+`error_code=UNSAFE_URL` for `http://127.0.0.1/internal` and accepted the live
+public deployment URL with HTTP 200. Remote crawling is now preceded by DNS
+and private/reserved-address validation.
 
 This proves the current challenge slice is a real URL-to-brand-to-campaign-
 to-draft path. The `direct_http` reader is SSRF-guarded, OpenAI produced the

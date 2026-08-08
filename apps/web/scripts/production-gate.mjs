@@ -19,17 +19,20 @@ function resolveBaseUrl() {
   return url;
 }
 
-function requestWithIpv4(url) {
+function requestWithIpv4(url, options = {}) {
   return new Promise((resolve, reject) => {
     const requestFn = url.protocol === "https:" ? httpsRequest : httpRequest;
+    const requestHeaders = {
+      accept: "text/html,application/json;q=0.9,*/*;q=0.8",
+      "user-agent": "vibemarketer-production-gate/1.0",
+      ...(options.headers ?? {}),
+    };
     const request = requestFn(
       url,
       {
         family: 4,
-        headers: {
-          accept: "text/html,application/json;q=0.9,*/*;q=0.8",
-          "user-agent": "vibemarketer-production-gate/1.0",
-        },
+        method: options.method ?? "GET",
+        headers: requestHeaders,
       },
       (response) => {
         const chunks = [];
@@ -63,20 +66,24 @@ function requestWithIpv4(url) {
       request.destroy(new Error("request timed out"));
     });
     request.on("error", reject);
+    if (options.body) request.write(options.body);
     request.end();
   });
 }
 
-async function request(baseUrl, path) {
+async function request(baseUrl, path, options = {}) {
   const target = new URL(path, baseUrl);
   let response;
   let body;
   try {
     response = await fetch(target, {
       redirect: "manual",
+      method: options.method ?? "GET",
+      body: options.body,
       headers: {
         accept: "text/html,application/json;q=0.9,*/*;q=0.8",
         "user-agent": "vibemarketer-production-gate/1.0",
+        ...(options.headers ?? {}),
       },
       signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     });
@@ -84,7 +91,7 @@ async function request(baseUrl, path) {
   } catch {
     // Some CI/build hosts have an unreachable IPv6 route while Zerops serves
     // both A and AAAA records. Retry the same request with IPv4 explicitly.
-    ({ response, body } = await requestWithIpv4(target));
+    ({ response, body } = await requestWithIpv4(target, options));
   }
   const declaredLength = Number(response.headers.get("content-length") ?? 0);
   if (declaredLength > MAX_RESPONSE_BYTES) {
@@ -186,6 +193,34 @@ async function main() {
         );
         requireCondition(!body.includes("AUTH DISABLED"), "/app exposes auth-bypass mode");
         return redirectedToLogin ? "redirects to login" : "renders login boundary";
+      },
+    },
+    {
+      name: "email auth transport",
+      run: async () => {
+        const form = new URLSearchParams({
+          mode: "signup",
+          next: "/app",
+          email: "invalid",
+          password: "weak",
+          confirm: "weak",
+        });
+        const { response } = await request(baseUrl, "/api/auth/email", {
+          method: "POST",
+          body: form.toString(),
+          headers: { "content-type": "application/x-www-form-urlencoded" },
+        });
+        const location = response.headers.get("location") ?? "";
+        requireCondition(response.status === 303, `/api/auth/email returned ${response.status}`);
+        requireCondition(
+          new URL(location, baseUrl).pathname === "/signup",
+          `/api/auth/email redirects to ${location || "<none>"}`,
+        );
+        requireCondition(
+          !/[?&](email|password|confirm)=/i.test(location),
+          "/api/auth/email leaks credential fields in its redirect URL",
+        );
+        return "same-origin POST, safe redirect, no credential fields in URL";
       },
     },
     ...[

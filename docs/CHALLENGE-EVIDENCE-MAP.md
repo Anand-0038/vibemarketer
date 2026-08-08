@@ -20,6 +20,7 @@ repository files, live behavior, and remaining human-controlled gates.
 | Working application, not Hello World | URL-to-brand-memory-to-draft flow and `specs/marketing-loop.md` | Verified |
 | Meaningful Zerops usage | `zerops.yaml`, `README.md`, `docs/decisions.md`; web, PostgreSQL, NATS, private worker | Verified |
 | Reachable live deployment | `https://web-2b24-3000.prg1.zerops.app`; `/api/ready` | Verified |
+| Judge-friendly email auth | Native `/api/auth/email` POST, public-host redirect, Supabase session cookies, no credential URL leakage | Verified |
 | Persistent application state | Zerops PostgreSQL adapter and lifecycle evidence | Verified |
 | Asynchronous infrastructure | NATS JetStream wake-up plus private worker | Verified at infrastructure boundary |
 | Human approval before publishing | `/app/queue`, approval route, publish state machine | Verified |
@@ -43,6 +44,7 @@ repository files, live behavior, and remaining human-controlled gates.
 | Managed PostgreSQL | Durable tenant-scoped marketing state, attempts, leases, retries, and reports. |
 | NATS JetStream | Durable publishing wake-up transport; the database remains authoritative. |
 | Health checks and logs | Zerops health checks gate the web runtime; service logs verify worker/NATS behavior. |
+| Auth safety boundary | Same-origin email POST is rate-limited and fail-closed; Supabase remains the external auth provider and no OTP delivery is required for new challenge accounts. |
 | GitHub delivery | Source repository and visible commit history provide judge access and reproducibility. |
 
 ## Release gate
