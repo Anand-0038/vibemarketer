@@ -289,7 +289,7 @@ export default function OnboardingPage() {
             Brand locked. Writing X · LinkedIn · Reddit drafts in your voice…
           </p>
           <p className="mt-3 font-mono text-[11px] text-muted">
-            Nothing publishes without your approve.
+            Nothing publishes without your approval.
           </p>
         </div>
       ) : null}

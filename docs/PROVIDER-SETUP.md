@@ -30,12 +30,18 @@ Tavily response does not turn into invented research.
 
 | Variable / setup | Used by | Required for |
 | --- | --- | --- |
-| `COMPOSIO_API_KEY` | the private publishing worker | Provider API access and OAuth connection management |
+| `COMPOSIO_API_KEY` | web connector routes and private publishing worker | Provider API access, OAuth connection management, and live execution |
 | Connected Composio account | the selected channel | A real LinkedIn, X, or Reddit publish confirmation |
 
 The connected account must be authorized through the product's OAuth flow for
 the demo user. A draft becoming `approved` is not a publish: the worker only
 records `published` after the provider returns a valid external identifier.
+
+Add `COMPOSIO_API_KEY` as a project-level secret so both the public web
+connector routes and the private worker receive it. Do not put the value in
+`zerops.yaml`, Git, screenshots, or chat. After the secret is added, restart or
+redeploy `web` and `worker`, open `/app/connectors`, connect one channel, and
+refresh until that toolkit reports `ACTIVE`.
 
 ## Existing Zerops boundaries
 
