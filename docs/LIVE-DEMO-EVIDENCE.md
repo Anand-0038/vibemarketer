@@ -8,7 +8,8 @@ identifiers, or provider secrets.
 
 - Date: 2026-08-08 UTC
 - Repository: `https://github.com/Anand-0038/vibemarketer`
-- Verified commit: `5ab2ca6`
+- Verified deployed commit: `c744b24`
+- Repository evidence commit: `69a628a`
 - Zerops URL: `https://web-2b24-3000.prg1.zerops.app`
 - Zerops project: `0xanand`
 - Active services: `web`, managed `db` PostgreSQL, `nats`, private `worker`
@@ -57,6 +58,18 @@ smoke.
   private drain health checks after the shared internal secret was activated.
 - Internal database, NATS, and worker services are not public application
   endpoints.
+
+## Approval-boundary smoke
+
+A second disposable-account run approved one generated draft through the live
+HITL queue. The public UI reported `Queued for provider execution` while
+Composio was unavailable, and the report showed one queue event with zero
+provider-published posts. This is the intended fail-closed behavior: approval
+records delivery intent, but the product does not claim publication without a
+provider identifier.
+
+The recorded browser evidence is
+[`demo/vibemarketer-approval-boundary.mp4`](demo/vibemarketer-approval-boundary.mp4).
 
 ## Not yet verified
 

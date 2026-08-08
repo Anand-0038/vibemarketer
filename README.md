@@ -141,6 +141,8 @@ durable queue, private worker network, health checks, and deployment surface.
   [`docs/DEMO-SCRIPT.md`](docs/DEMO-SCRIPT.md).
 - A real 39-second core-flow recording is available at
   [`docs/demo/vibemarketer-core-demo.mp4`](docs/demo/vibemarketer-core-demo.mp4).
+- The approval-boundary recording shows durable queue intent and the honest
+  no-provider outcome at [`docs/demo/vibemarketer-approval-boundary.mp4`](docs/demo/vibemarketer-approval-boundary.mp4).
 - The exact provider requirements and verification order are documented in
   [`docs/PROVIDER-SETUP.md`](docs/PROVIDER-SETUP.md).
 - Live Zerops web deployment: [`web-2b24-3000.prg1.zerops.app`](https://web-2b24-3000.prg1.zerops.app)

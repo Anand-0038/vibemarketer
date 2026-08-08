@@ -1,7 +1,8 @@
 # VibeMarketer — Zerops Challenge plan
 
-Status: Core URL-to-draft slice live on Zerops; provider-confirmed publish,
-demo assets, social post, and official submission remain open gates.
+Status: Core URL-to-draft slice and judge demo assets live on Zerops;
+provider-confirmed publish, social post, and official submission remain open
+gates.
 
 Audit date: 2026-08-08
 
@@ -693,9 +694,10 @@ must be completed without pasting secrets into chat:
 1. Add the real Supabase service-role key to the Zerops project environment;
    the browser-facing URL and publishable key are already public config in the
    committed deployment definition.
-2. Add the real provider secrets required for the demonstrated workflow,
-   starting with the existing OpenAI, research, memory, and publishing
-   integrations that are actually used.
+2. Add the real provider secrets required for the demonstrated workflow.
+   OpenAI is already configured for the core flow; Firecrawl, Supermemory, and
+   Tavily remain optional enrichment, while Composio plus one connected social
+   account is required for provider-confirmed publishing.
 3. Exercise one real URL-to-brand-memory/campaign flow on the live web app.
 4. Exercise one approved publishing attempt and verify the returned provider
    identifier through the private worker.
@@ -776,10 +778,11 @@ in Zerops before the authenticated research/publishing demo can be claimed.
 - `corepack pnpm test:unit`, `corepack pnpm lint`, `corepack pnpm build`, and
   the worker typecheck/build gates pass locally.
 - The worker reached NATS with explicit credentials and its private fallback
-  drain checks are succeeding after the shared secret restart. One
-  provider-confirmed publish, the demo evidence, social post, and final
-  submission form remain outstanding. No provider success is claimed without
-  real credentials and a returned provider identifier.
+  drain checks are succeeding after the shared secret restart. The core and
+  approval-boundary demo recordings are now committed under `docs/demo/`.
+  One provider-confirmed publish, the social post, and final submission form
+  remain outstanding. No provider success is claimed without real credentials
+  and a returned provider identifier.
 - The Zerops callback URL is now allowlisted in the external Supabase Auth
   project. The challenge Auth configuration uses autoconfirm because the
   default shared Supabase mailer is restricted to authorized team addresses;
