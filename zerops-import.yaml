@@ -5,3 +5,12 @@ services:
     type: nodejs@22
     minContainers: 1
     maxContainers: 1
+    verticalAutoscaling:
+      minCpu: 1
+      maxCpu: 2
+      cpuMode: SHARED
+      minRam: 1
+      maxRam: 2
+      minDisk: 2
+      maxDisk: 8
+    override: true
