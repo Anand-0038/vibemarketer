@@ -85,7 +85,10 @@ The public readiness check is:
 curl -i https://web-2b24-3000.prg1.zerops.app/api/ready
 ```
 
-It should return HTTP `200` and `"status":"ready"`.
+It should return HTTP `200` and `"status":"ready"`. The JSON also includes
+non-secret Auth readiness fields. In the current challenge configuration,
+`auth.signupEnabled` is `true` and `auth.confirmationRequired` is `false`, so
+new judge accounts activate immediately and do not depend on OTP delivery.
 
 ## Deploy
 

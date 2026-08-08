@@ -8,9 +8,11 @@ identifiers, or provider secrets.
 
 - Date: 2026-08-08 UTC
 - Repository: `https://github.com/Anand-0038/vibemarketer`
-- Verified application source commit: `12c4bbd`
-- Zerops web rollout containing that source completed at 2026-08-08 20:29 UTC;
-  the final public health and browser-auth smoke passed at 20:31 UTC.
+- Verified application source commit: `f63a788`
+- Zerops web rollout containing that source completed at 2026-08-08 20:38 UTC;
+  the final public health smoke passed at 20:40 UTC. The auth browser smoke
+  recorded below was run against the same auth implementation before the
+  app-only SSRF hardening deploy.
 - Zerops URL: `https://web-2b24-3000.prg1.zerops.app`
 - Zerops project: `0xanand`
 - Active services: `web`, managed `db` PostgreSQL, `nats`, private `worker`
@@ -22,7 +24,7 @@ commit was deployed:
 
 | Check | Result |
 | --- | --- |
-| `GET /api/ready` | HTTP 200, `{ "ok": true, "product": "vibemarketer", "status": "ready" }` |
+| `GET /api/ready` | HTTP 200, `ok=true`, `status=ready`, Auth configured/reachable, signup enabled, confirmation not required |
 | `GET /` | HTTP 200 |
 | `GET /login` | HTTP 200 |
 | Unauthenticated `GET /app` | Expected redirect to `/login` |

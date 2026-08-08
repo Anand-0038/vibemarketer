@@ -1,6 +1,6 @@
 # VibeMarketer
 
-## Cursor for marketing — Zerops Challenge build
+## Cursor for marketing — an agent fleet for founder distribution
 
 Give VibeMarketer a product URL and its agent fleet builds brand memory,
 creates channel-native drafts, routes them through human approval, publishes
@@ -8,10 +8,11 @@ through connected providers, and reports what actually happened.
 
 [Live application](https://web-2b24-3000.prg1.zerops.app) · [Source repository](https://github.com/Anand-0038/vibemarketer)
 
-This repository is the working VibeMarketer submission for the WeMakeDevs
-Zerops Challenge: a multi-service SaaS that turns a founder's product URL into
-evidence-backed marketing work, with durable state, asynchronous execution,
-human approval, and honest provider outcomes.
+This repository contains the current VibeMarketer product: a multi-service SaaS
+that turns a founder's product URL into evidence-backed marketing work, with
+durable state, asynchronous execution, human approval, and honest provider
+outcomes. Its current live release is also the build being submitted to the
+WeMakeDevs Zerops Challenge.
 
 ## Product flow
 
@@ -173,7 +174,10 @@ durable queue, private worker network, health checks, and deployment surface.
 
 Readiness can be checked without an account at
 [`/api/ready`](https://web-2b24-3000.prg1.zerops.app/api/ready), which should
-return HTTP `200` with `"status":"ready"`.
+return HTTP `200` with `"status":"ready"`. The response also reports the
+non-secret Auth checks (`configured`, `reachable`, `signupEnabled`, and
+`confirmationRequired`) so a judge can distinguish an Auth/OTP configuration
+problem from a database or deployment problem.
 
 ## Pricing
 
