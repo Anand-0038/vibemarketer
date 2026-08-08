@@ -192,10 +192,10 @@ export default function MemoryPage() {
         Brand memory
       </h1>
       <p className="mt-2 max-w-xl text-sm text-muted">
-        Layered brand memory: structured brand in Supabase is source of truth;
-        SuperMemory is the multi-tenant retrieval index (core + semantic +
-        episodic from HITL). Isolation is per workspace owner — not brand name
-        alone.
+        Layered brand memory: structured brand data in Zerops PostgreSQL is the
+        source of truth; SuperMemory is optional retrieval enrichment (core +
+        semantic + episodic from HITL). Isolation is per workspace owner — not
+        brand name alone.
       </p>
 
       {error ? (

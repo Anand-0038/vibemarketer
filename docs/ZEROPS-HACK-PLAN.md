@@ -104,17 +104,22 @@ available.
 
 ### Durable publishing state machine
 
-- `supabase/migrations/20260723090000_marketing_publish_outbox.sql` defines
-  `marketing_publish_attempts` and `marketing_outbox_jobs`, including unique
-  idempotency keys, leases, retries, dead-letter state, and recovery helpers.
-- `apps/web/src/lib/publishing/publish-attempt-repo.ts` uses the service-role
-  database path for those records and RPCs.
+- `supabase/migrations/20260723090000_marketing_publish_outbox.sql` retains the
+  compatibility schema for non-Zerops production hosts. The Zerops runtime
+  bootstraps equivalent `vibemarketer_publish_attempts` and
+  `vibemarketer_outbox_jobs` tables in managed PostgreSQL.
+- `apps/web/src/lib/publishing/publish-attempt-repo.ts` selects the durable
+  adapter for the current backend; Zerops uses
+  `zerops-publish-attempt-repo.ts` and parameterized PostgreSQL queries.
 - `apps/web/src/lib/publishing/publish-attempt-service.ts` validates the post
   revision, claims a job, executes a real provider call, classifies failures,
   records provider success, confirms the post in marketing state, and refuses
   to auto-republish an unknown provider outcome.
 - The internal drain route already supports authenticated cron and internal
   worker callers. It currently runs the batch inside the Next.js process.
+- The private publishing status route uses the same selected backend as the
+  worker: Zerops reads the `vibemarketer_*` tables rather than legacy Supabase
+  table names, while the compatibility path remains available elsewhere.
 
 ### Safety and verification already present
 
@@ -277,8 +282,8 @@ guards, explicit secrets, and a reproducible root `zerops.yaml`.
 Zerops `web` service
   -> Zerops `db` PostgreSQL service (private connection)
        |-> marketing_state JSONB row per Supabase owner UUID
-       |-> marketing_publish_attempts
-       `-> marketing_outbox_jobs
+       |-> vibemarketer_publish_attempts
+       `-> vibemarketer_outbox_jobs
 
 Supabase remains Auth-only.
 ```

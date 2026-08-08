@@ -34,7 +34,7 @@ async function getConnection(url: string): Promise<NatsConnection> {
 }
 
 /**
- * Publish a small wake-up after the durable Supabase outbox is committed.
+ * Publish a small wake-up after the durable PostgreSQL outbox is committed.
  * The outbox is authoritative; this message only reduces worker latency and
  * may be lost during a broker restart because the worker also polls safely.
  */

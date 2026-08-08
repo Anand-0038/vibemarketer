@@ -11,8 +11,8 @@ through connected providers, and reports what actually happened.
 This repository contains the current VibeMarketer product: a multi-service SaaS
 that turns a founder's product URL into evidence-backed marketing work, with
 durable state, asynchronous execution, human approval, and honest provider
-outcomes. This release is deployed on Zerops and is the build submitted to the
-WeMakeDevs Zerops Challenge.
+outcomes. The current hosted release runs on Zerops; deployment and challenge
+evidence are documented separately from the product itself.
 
 ## Product flow
 

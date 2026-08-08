@@ -8,12 +8,12 @@ identifiers, or provider secrets.
 
 - Date: 2026-08-08 UTC
 - Repository: `https://github.com/Anand-0038/vibemarketer`
-- Verified application source commit: `d72d7bd`
-- Zerops web rollout containing that source completed at 2026-08-08 20:49 UTC;
-  the final public health and Auth-readiness smoke passed at 20:50 UTC. The
-  browser auth smoke recorded below was run against the same auth
-  implementation; the final rollout adds only readiness diagnostics around
-  that already-verified path.
+- Verified application source commit: `0556638`
+- Zerops web rollout containing that source completed at 2026-08-08 21:25 UTC;
+  the public production gate passed 9/9 checks after rollout. The browser auth
+  and product smoke recorded below was run against the same deployed auth and
+  marketing path; the latest rollout changes only the private publishing
+  status read path and product-facing architecture copy.
 - Zerops URL: `https://web-2b24-3000.prg1.zerops.app`
 - Zerops project: `0xanand`
 - Active services: `web`, managed `db` PostgreSQL, `nats`, private `worker`
@@ -30,6 +30,7 @@ commit was deployed:
 | `GET /login` | HTTP 200 |
 | Unauthenticated `GET /app` | Expected redirect to `/login` |
 | Next static asset | HTTP 200 |
+| Unauthenticated `GET /api/internal/publishing/status` | HTTP 401; worker secret required |
 
 ## Auth browser smoke
 
@@ -78,8 +79,10 @@ smoke.
   and publishing outbox state.
 - NATS JetStream is used as a durable worker wake-up transport; PostgreSQL
   remains authoritative for idempotency, leases, retries, and outcomes.
-- The private worker reached NATS with explicit credentials and completed
-  private drain health checks after the shared internal secret was activated.
+- The private worker rollout logged `publishing_worker_connected` for the
+  `VIBEMARKETER_MARKETING` JetStream stream with explicit credentials, then
+  completed private drain polling after the shared internal secret was
+  activated.
 - Internal database, NATS, and worker services are not public application
   endpoints.
 
