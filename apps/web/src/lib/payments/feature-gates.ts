@@ -9,6 +9,7 @@ import {
   type EntitlementTier,
 } from "@/lib/payments/entitlements";
 import { resolveEffectiveTier } from "@/lib/payments/run-meters";
+import { getMarketingStore } from "@/lib/marketing-store";
 
 export type FeatureKey =
   | "brand"
@@ -34,9 +35,9 @@ const FEATURE_MIN_TIER: Record<FeatureKey, EntitlementTier> = {
   brand: "free",
   social_draft: "free",
   cmo_chat: "free",
-  /** Starter: Reddit + social + campaign planning */
+  /** Free includes one bounded campaign preview; paid tiers get the full allowance. */
   reddit_agent: "solo",
-  campaign: "solo",
+  campaign: "free",
   creative: "solo",
   /** Growth: full agent wall + L2 auto-queue */
   hn_agent: "startup",
@@ -48,7 +49,7 @@ const FEATURE_LABEL: Record<FeatureKey, string> = {
   brand: "Brand onboarding",
   social_draft: "Social drafts (X · LinkedIn · Reddit)",
   reddit_agent: "Reddit agent",
-  campaign: "7-day campaign brief",
+  campaign: "7-day campaign brief (free preview)",
   hn_agent: "Hacker News agent",
   seo_agent: "SEO agent",
   l2_autonomy: "L2 auto-queue",
@@ -69,6 +70,14 @@ export function canUseFeature(
   feature: FeatureKey,
 ): boolean {
   return tierMeets(tier, FEATURE_MIN_TIER[feature]);
+}
+
+export const FREE_CAMPAIGN_PREVIEW_LIMIT = 1;
+
+export function freeCampaignPreviewAvailable(
+  usage: { by_kind: Record<string, number> },
+): boolean {
+  return (usage.by_kind.campaign ?? 0) < FREE_CAMPAIGN_PREVIEW_LIMIT;
 }
 
 export type FeatureAccessMap = Record<
@@ -98,10 +107,17 @@ export async function assertFeature(
   | { ok: false; response: NextResponse }
 > {
   const tier = await resolveEffectiveTier(ownerId);
+  if (
+    feature === "campaign" &&
+    tier === "free" &&
+    freeCampaignPreviewAvailable(await getMarketingStore().getUsage())
+  ) {
+    return { ok: true, tier };
+  }
   if (canUseFeature(tier, feature)) {
     return { ok: true, tier };
   }
-  const min = FEATURE_MIN_TIER[feature];
+  const min = FEATURE_MIN_TIER[feature] === "free" ? "solo" : FEATURE_MIN_TIER[feature];
   return {
     ok: false,
     response: NextResponse.json(

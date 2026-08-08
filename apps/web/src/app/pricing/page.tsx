@@ -35,6 +35,7 @@ const tiers = [
     features: [
       "Brand memory from your URL",
       "3-channel social drafts + HITL",
+      "1 seven-day campaign preview / mo",
       "CMO desk · site scorecard",
       "25 agent runs / mo",
       "Reddit / SEO / HN unlock on paid",
@@ -52,7 +53,7 @@ const tiers = [
     forWhom: "Solo founders & indie builders",
     features: [
       "Everything in Free",
-      "Reddit agent + 7-day campaign",
+      "Reddit agent + full campaign planning",
       "Grok Imagine creatives",
       "120 agent runs / mo",
       "HITL queue · live publish when connected",
