@@ -44,7 +44,9 @@ zerops:
         DATABASE_URL: ${db_connectionString}
         NATS_URL: ${nats_connectionString}
         NATS_SUBJECT: marketing.publish.requested
-      start: node apps/web/node_modules/next/dist/bin/next start -p 3000
+      # The build is emitted in apps/web/.next because this is a workspace
+      # deployment. Point Next at that app directory from the repository root.
+      start: node apps/web/node_modules/next/dist/bin/next start apps/web -p 3000
       healthCheck:
         httpGet:
           port: 3000
