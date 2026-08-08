@@ -1,27 +1,25 @@
 # Social post draft
 
-Replace the video and provider-result placeholders only after the live
-provider run is verified. The official post must be published manually and linked from
-`submission.md`.
+This copy is ready for manual publication with the committed core-flow video.
+Add a provider result only if a real connected account has returned one. The
+official post must be published manually and linked from `submission.md`.
 
-> My deployment was green. The product workflow still needed evidence.
+> A green deployment is not the same as a working marketing workflow.
 >
-> I built **VibeMarketer — Cursor for Marketing** during the Zerops Challenge:
-> give it a product URL, build evidence-backed brand memory, generate
-> channel-native drafts, route them through human approval, and publish only
-> after a real provider confirms the action.
+> I built **VibeMarketer — Cursor for Marketing** during the Zerops Challenge.
+> Give it a product URL and it builds evidence-backed brand memory, generates
+> channel-native drafts, and routes them through human approval.
 >
 > The challenge transformation runs the web app, managed PostgreSQL, NATS
 > JetStream wake-up transport, and private publishing worker on Zerops. The
 > database remains the source of truth for marketing state, while the worker
-> records provider-confirmed execution results. The current live smoke proves
-> the URL → brand memory → campaign → draft path; the connected-provider step
-> is shown only after its real result is available.
+> owns the asynchronous publishing boundary. The live demo proves the URL →
+> brand memory → campaign → drafts → HITL approval path. Provider publishing
+> fails closed until a connected account returns a real identifier.
 >
 > Live: https://web-2b24-3000.prg1.zerops.app
 > Repository: https://github.com/Anand-0038/vibemarketer
-> Demo video: [add working 60–90 second video]
-> Provider-confirmed result: [add verified public result URL]
+> Demo video: https://github.com/Anand-0038/vibemarketer/raw/refs/heads/main/docs/demo/vibemarketer-core-demo.mp4
 >
 > @WeMakeDevs @zeropsio
 > #ZeropsChallenge
@@ -29,9 +27,7 @@ provider run is verified. The official post must be published manually and linke
 ## Before publishing
 
 - Show the failed or unavailable dependency honestly if it is still present.
-- Record the working brand → draft → approval → provider-confirmed path. If a
-  social account is not connected yet, show the explicit unavailable state
-  instead of implying a publication.
+- Use the committed core-flow video now; replace it with a provider-confirmed
+  cut only after a real account returns a post ID.
 - Use a public video URL with captions and no private credentials in frame.
-- Replace every placeholder above and then copy the resulting post URL into
-  `submission.md`.
+- Copy the resulting post URL into `submission.md` after manual publication.
