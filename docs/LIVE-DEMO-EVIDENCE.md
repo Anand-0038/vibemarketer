@@ -8,10 +8,9 @@ identifiers, or provider secrets.
 
 - Date: 2026-08-08 UTC
 - Repository: `https://github.com/Anand-0038/vibemarketer`
-- Verified deployed source: the Zerops web rollout completed at 2026-08-08
-  20:15 UTC from the working tree containing the authenticated-route and
-  browser-auth fixes. The final repository commit is recorded below after the
-  source changes are committed and redeployed.
+- Verified application source commit: `12c4bbd`
+- Zerops web rollout containing that source completed at 2026-08-08 20:15 UTC;
+  a post-commit redeploy is being run as the final release check.
 - Zerops URL: `https://web-2b24-3000.prg1.zerops.app`
 - Zerops project: `0xanand`
 - Active services: `web`, managed `db` PostgreSQL, `nats`, private `worker`
