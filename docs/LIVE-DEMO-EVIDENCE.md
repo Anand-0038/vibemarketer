@@ -8,10 +8,10 @@ identifiers, or provider secrets.
 
 - Date: 2026-08-08 UTC
 - Repository: `https://github.com/Anand-0038/vibemarketer`
-- Verified web source commit: `5144e8e`
+- Verified web source commit: `40c2c07`
 - Verified worker/deployment-manifest commit: `4065282`
 - Zerops web rollout containing the verified web source completed at 2026-08-08
-  22:02 UTC; the public production gate and browser auth checks were rerun after
+  22:13 UTC; the public production gate and browser auth checks were rerun after
   rollout. The
   private worker rollout containing `4065282` completed at 21:43 UTC and
   started successfully with the pruned runtime bundle. The browser auth and
