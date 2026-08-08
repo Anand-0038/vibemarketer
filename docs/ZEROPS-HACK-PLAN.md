@@ -1,7 +1,7 @@
 # VibeMarketer — Zerops Challenge plan
 
-Status: Zerops services provisioned; implementation and live deployment are
-being verified in staged checkpoints.
+Status: Web checkpoint live on Zerops; worker and provider-confirmed publish
+path remain staged deployment gates.
 
 Audit date: 2026-08-08
 
@@ -45,9 +45,12 @@ The migration is deliberately staged:
 4. Verify the complete URL-to-report flow and record the live demo evidence.
 
 The current Zerops project is `0xanand` (`IzGL13uGTKeL0Cg8qBNvjw`) in the
-`Anand-0038` organization. `web`, `db`, `nats`, and `worker` are provisioned;
-the public web deployment remains unverified until required Auth/provider
-secrets are configured and the service is pushed.
+`Anand-0038` organization. `web`, `db`, `nats`, and `worker` are provisioned.
+The web checkpoint is live at
+`https://web-2b24-3000.prg1.zerops.app`; `/`, `/login`, `/app`, static assets,
+and `/api/ready` were verified externally. The worker still needs its first
+deployment and `INTERNAL_WORKER_SECRET` before the private async publish path
+can be claimed as live.
 
 ## 1. What already works
 
@@ -123,16 +126,18 @@ available.
 
 ## 2. What is incomplete, unsupported, or unverified
 
-### Zerops is provisioned but not yet externally verified
+### Web checkpoint is live; worker path is not yet live
 
 - Root `zerops.yaml` defines the web and private publishing-worker runtimes.
 - The authenticated project inventory contains `web`, `db`, `nats`, and
-  `worker`; `db` and `nats` are active while the application services await
-  their first deployment.
-- There is no verified public Zerops URL yet. A service being
-  `READY_TO_DEPLOY` is not evidence that judges can open it.
-- No public service health, private-network connection, or runtime log has
-  been verified until the first push succeeds.
+  `worker`; `web`, `db`, `nats`, and `worker` are active.
+- The verified public web URL is
+  `https://web-2b24-3000.prg1.zerops.app`. From outside Zerops, `/` and
+  `/login` return `200`, `/app` redirects to `/login`, static assets return
+  `200`, and `/api/ready` returns `{ "ok": true }`.
+- The web health check has exercised the direct Zerops PostgreSQL adapter and
+  created/validated its application schema. NATS and the private worker still
+  need a live connection check.
 - The project-local `.mcp.json` is tokenless setup metadata, not proof that
   ZCP can call the project.
 
@@ -145,9 +150,9 @@ available.
 - `apps/web/src/lib/publishing/nats-wakeup.ts` publishes a small wake-up only
   after the PostgreSQL outbox is durable; a bounded poll remains the recovery
   fallback when NATS is unavailable.
-- The worker and NATS contract are locally typechecked and tested. A live
-  Zerops worker connection and provider-confirmed attempt remain deployment
-  gates.
+- The worker and NATS contract are locally typechecked and tested. The live
+  worker now reaches NATS with explicit credentials; the private drain still
+  needs a post-secret-restart confirmation and a provider-confirmed attempt.
 
 ### Persistence migration is implemented but live verification is pending
 
@@ -298,9 +303,9 @@ retry, dead-letter, or require manual reconciliation.
 | Service | Required now? | Product reason |
 | --- | --- | --- |
 | `web` Node.js | Yes | Existing UI, auth callback, API, queue/HITL/report surfaces. |
-| `db` PostgreSQL | Provisioned; live verification pending | Durable tenant-scoped marketing state and publishing execution records. |
-| `nats` | Provisioned; live verification pending | Durable delivery of asynchronous publish work and worker restart recovery. |
-| `worker` Node.js | Provisioned; live verification pending | Keeps asynchronous publishing dispatch out of the request-serving web path. |
+| `db` PostgreSQL | Provisioned; web readiness verified | Durable tenant-scoped marketing state and publishing execution records. |
+| `nats` | Provisioned; worker connection verified | Durable delivery of asynchronous publish work and worker restart recovery. |
+| `worker` Node.js | Active; private drain verification pending | Keeps asynchronous publishing dispatch out of the request-serving web path. |
 | object storage | No for MVP | Add only if generated assets need durable evidence; current core path can operate without it. |
 | Redis/Valkey/Qdrant | No | No current product requirement justifies them. |
 
@@ -684,8 +689,9 @@ secrets into chat:
 3. Push the `web` service with the root `zerops.yaml`.
 4. Read back build/runtime logs, enable the public subdomain only after a
    valid HTTP deployment, and verify the URL from outside Zerops.
-5. Push the private `worker`, verify its NATS connection and private drain
-   calls, then exercise one real approved publishing attempt.
+5. Restart/redeploy both runtimes after the generated shared internal secret is
+   active, verify the private drain call, then exercise one real approved
+   publishing attempt.
 
 Until those steps return evidence, “Zerops is configured” means the account,
 project, service, and deployment definition are ready—not that the product is
@@ -739,23 +745,29 @@ The phase-1 `web` Node.js service was then created from
 [`zerops-import.yaml`](../zerops-import.yaml) and verified as
 `READY_TO_DEPLOY` (service ID `tlq6CSlESEeBfHignulafg`).
 
-Deployment is currently blocked by missing application configuration: the
-Zerops-generated public URL is now recorded in `zerops.yaml`, but the `web`
-service still has no Supabase public URL/key, Supabase service-role key, or
-provider secrets. The subdomain cannot be enabled before the service has a
-valid HTTP deployment. Add the real values as Zerops service
-secrets/variables, then run the first `zcli push`; no token or provider
-credential belongs in this repository or in chat.
+That initial deployment blocker is resolved for the web checkpoint. The
+standalone Next.js runtime is deployed and the public subdomain is enabled at
+`https://web-2b24-3000.prg1.zerops.app`. Server-only Supabase and provider
+secrets are still intentionally absent from the repository and must be added
+in Zerops before the authenticated research/publishing demo can be claimed.
 
 ## Continuation evidence — 2026-08-08
 
 - The public source repository is `https://github.com/Anand-0038/vibemarketer`.
 - Local Git commits are authored as `Anand-0038`.
-- Zerops inventory currently contains active `db` and `nats` services plus
-  `READY_TO_DEPLOY` `web` and `worker` services.
+- Zerops inventory currently contains active `web`, `db`, `nats`, and `worker`
+  services.
+- Public web evidence: `/api/ready` returned HTTP 200 with `ok: true`, `/`
+  and `/login` returned HTTP 200, `/app` returned the expected 307 redirect
+  to `/login`, and a Next static asset returned HTTP 200.
+- The deployment used Next standalone output and Zerops runtime init commands
+  to place static/public assets beside the traced server.
 - The PostgreSQL marketing-store adapter, publishing-attempt adapter, NATS
   wake-up publisher, and private worker are implemented and locally verified.
 - `corepack pnpm test:unit`, `corepack pnpm lint`, `corepack pnpm build`, and
   the worker typecheck/build gates pass locally.
-- No public Zerops URL is claimed yet. A live deployment still requires the
-  real service secrets and public runtime checks described above.
+- The worker reached NATS with explicit credentials. The private drain must
+  still be rechecked after the project-scoped secret becomes the active runtime
+  value, followed by one provider-confirmed publish and the final submission
+  form. No provider success is claimed without real credentials and a returned
+  provider identifier.

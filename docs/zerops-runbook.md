@@ -7,12 +7,15 @@ The repository contains two separate Zerops configuration layers:
 
 ## Required secret variables
 
-Add these as Zerops secret variables on the `web` service. Do not commit or
-paste their values into chat:
+Add these as Zerops secret variables in the project environment. Do not commit
+or paste their values into chat. This existing project is platform-managed with
+`envIsolation=none`, so the web and private worker intentionally share only
+this one internal secret. Provider keys should remain service-scoped where
+possible. The browser-facing Supabase URL and publishable key are public client
+configuration and are already pinned in `zerops.yaml`; they are not server
+secrets.
 
 ```text
-NEXT_PUBLIC_SUPABASE_URL
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
 SUPABASE_SERVICE_ROLE_KEY
 INTERNAL_WORKER_SECRET
 ```
@@ -25,10 +28,10 @@ variables required by the chosen demo, such as `OPENAI_API_KEY`,
 `db` and `nats` service references. The worker receives the NATS connection
 and the web internal secret reference from the same file.
 
-Before deploying, set the project environment isolation to `service` in the
-Zerops project settings. The manifest uses explicit cross-service references,
-so this keeps web-only provider secrets out of the worker while preserving the
-private database/NATS wiring.
+The existing project reports `envIsolation=none` as platform-managed/read-only
+through ZCP, so this runbook uses a generated project-scoped
+`INTERNAL_WORKER_SECRET` and does not place it in the repository. The manifest
+still uses explicit cross-service database/NATS references.
 
 ## Deploy
 
@@ -58,7 +61,9 @@ zcli service log web --project-id IzGL13uGTKeL0Cg8qBNvjw --limit 100
 zcli service log worker --project-id IzGL13uGTKeL0Cg8qBNvjw --limit 100
 ```
 
-The deployment is not complete until the generated public URL returns 200
-from `/`, `/api/ready` reports `{ "ok": true }`, `/app` remains protected,
-and the worker logs show a NATS connection. A `READY_TO_DEPLOY` service is not
-live-deployment evidence.
+The web checkpoint is live at
+`https://web-2b24-3000.prg1.zerops.app`: `/` and `/login` return 200,
+`/app` remains protected, and `/api/ready` reports `{ "ok": true }`. The
+overall multi-service submission is not complete until the worker is deployed,
+its logs show a NATS connection, and the real provider path is verified. A
+`READY_TO_DEPLOY` service is not live-deployment evidence.

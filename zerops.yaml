@@ -80,5 +80,4 @@ zerops:
         NATS_SUBJECT: marketing.publish.requested
         NATS_DURABLE_CONSUMER: vibemarketer-publish-worker
         WEB_INTERNAL_URL: http://web:3000
-        INTERNAL_WORKER_SECRET: ${web_INTERNAL_WORKER_SECRET}
       start: node apps/worker/dist/index.js
