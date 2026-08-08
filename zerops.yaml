@@ -14,7 +14,6 @@ zerops:
         # must be supplied as service/project variables in Zerops.
         NODE_ENV: production
         ZEROPS: "1"
-        ZEROPS_ENV: production
         NEXT_PUBLIC_SITE_URL: https://web-2b24-3000.prg1.zerops.app
         NEXT_PUBLIC_SUPABASE_URL: https://sdfahtxjywitbujjjlny.supabase.co
         NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "sb_publishable_-7401vYmixYapr-8dIL_Ww_qaIpvGCn"
@@ -38,7 +37,6 @@ zerops:
       envVariables:
         NODE_ENV: production
         ZEROPS: "1"
-        ZEROPS_ENV: production
         MARKETING_STORE_BACKEND: zerops
         NEXT_PUBLIC_SITE_URL: https://web-2b24-3000.prg1.zerops.app
         NEXT_PUBLIC_SUPABASE_URL: https://sdfahtxjywitbujjjlny.supabase.co
@@ -67,7 +65,6 @@ zerops:
       envVariables:
         NODE_ENV: production
         ZEROPS: "1"
-        ZEROPS_ENV: production
         NATS_URL: ${nats_connectionString}
         NATS_STREAM: VIBEMARKETER_MARKETING
         NATS_SUBJECT: marketing.publish.requested
