@@ -1,13 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type FormEvent } from "react";
-import { signupErrorMessage, signupOutcome } from "@/lib/auth/errors";
+import { useActionState, useState } from "react";
 import {
-  normalizeEmail,
-  validateEmail,
-  validatePassword,
-} from "@/lib/auth/validation";
+  signInWithPassword,
+  signUpWithPassword,
+  type AuthActionState,
+} from "@/app/login/actions";
 import { createClient } from "@/lib/supabase/client";
 import { SITE_EMAIL, siteUrl } from "@/lib/site";
 
@@ -25,10 +24,13 @@ export function AuthForm({
   next?: string;
   authReady: boolean;
 }) {
-  const [pending, setPending] = useState(false);
+  const emailAction = mode === "login" ? signInWithPassword : signUpWithPassword;
+  const [authState, emailFormAction, actionPending] = useActionState<
+    AuthActionState,
+    FormData
+  >(emailAction, {});
   const [googlePending, setGooglePending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
 
   function callbackUrl(): string {
     const url = new URL(siteUrl("/auth/callback"));
@@ -36,90 +38,10 @@ export function AuthForm({
     return url.toString();
   }
 
-  async function handleEmailSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!authReady || pending || googlePending) return;
-
-    setPending(true);
-    setError(null);
-    setMessage(null);
-
-    const formData = new FormData(event.currentTarget);
-    const emailRaw = String(formData.get("email") ?? "");
-    const password = String(formData.get("password") ?? "");
-    const confirm = String(formData.get("confirm") ?? "");
-    const emailError = validateEmail(emailRaw);
-    const passwordError = validatePassword(password);
-
-    if (emailError || passwordError) {
-      setError(emailError ?? passwordError ?? "Invalid account details.");
-      setPending(false);
-      return;
-    }
-    if (mode === "signup" && password !== confirm) {
-      setError("Passwords do not match.");
-      setPending(false);
-      return;
-    }
-
-    try {
-      const supabase = createClient();
-      if (mode === "login") {
-        const { error: authError } = await supabase.auth.signInWithPassword({
-          email: normalizeEmail(emailRaw),
-          password,
-        });
-        if (authError) {
-          const code = (authError as { code?: string }).code ?? "";
-          const text = (authError.message || "").toLowerCase();
-          setError(
-            code === "email_not_confirmed" || text.includes("email not confirmed")
-              ? "This account still needs email confirmation. This challenge deployment does not rely on OTP delivery for new accounts; use a different address or ask the owner to configure SMTP."
-              : "Invalid email or password.",
-          );
-          return;
-        }
-        window.location.assign(next);
-        return;
-      }
-
-      const { data, error: authError } = await supabase.auth.signUp({
-        email: normalizeEmail(emailRaw),
-        password,
-        options: { emailRedirectTo: callbackUrl() },
-      });
-      if (authError) {
-        setError(signupErrorMessage(authError));
-        return;
-      }
-      if (data.session) {
-        window.location.assign(next);
-        return;
-      }
-
-      const outcome = signupOutcome({
-        hasSession: false,
-        identityCount: data.user?.identities?.length,
-      });
-      if (outcome?.kind === "existing_account") setError(outcome.message);
-      else {
-        setMessage(
-          outcome?.message ||
-            "Account created. Check your email to finish confirmation before signing in.",
-        );
-      }
-    } catch {
-      setError("Authentication is temporarily unavailable. Try again shortly.");
-    } finally {
-      setPending(false);
-    }
-  }
-
   async function handleGoogle() {
-    if (!authReady || pending || googlePending) return;
+    if (!authReady || actionPending || googlePending) return;
     setGooglePending(true);
     setError(null);
-    setMessage(null);
     try {
       const supabase = createClient();
       const { data, error: authError } = await supabase.auth.signInWithOAuth({
@@ -200,7 +122,7 @@ export function AuthForm({
             <button
               type="submit"
               className="btn-ghost focus-ring flex w-full items-center justify-center gap-2 text-base"
-              disabled={!authReady || googlePending || pending}
+              disabled={!authReady || googlePending || actionPending}
             >
               <GoogleMark />
               {googlePending ? "Redirecting…" : "Continue with Google"}
@@ -214,7 +136,8 @@ export function AuthForm({
         </>
       ) : null}
 
-      <form method="post" onSubmit={(event) => void handleEmailSubmit(event)} className="space-y-4">
+      <form method="post" action={emailFormAction} className="space-y-4">
+        <input type="hidden" name="next" value={next} />
         <div>
           <label htmlFor="email" className="section-label mb-2 block">
             Email
@@ -228,7 +151,7 @@ export function AuthForm({
             maxLength={254}
             className="input-field w-full"
             placeholder="you@company.com"
-            disabled={!authReady || pending || googlePending}
+            disabled={!authReady || actionPending || googlePending}
           />
         </div>
         <div>
@@ -244,7 +167,7 @@ export function AuthForm({
             minLength={8}
             maxLength={72}
             className="input-field w-full"
-            disabled={!authReady || pending || googlePending}
+            disabled={!authReady || actionPending || googlePending}
           />
         </div>
         {mode === "signup" ? (
@@ -261,28 +184,28 @@ export function AuthForm({
               minLength={8}
               maxLength={72}
               className="input-field w-full"
-              disabled={!authReady || pending || googlePending}
+              disabled={!authReady || actionPending || googlePending}
             />
           </div>
         ) : null}
 
-        {error ? (
+        {error || authState.error ? (
           <p className="text-sm text-danger" role="alert">
-            {error}
+            {error || authState.error}
           </p>
         ) : null}
-        {message ? (
+        {authState.message ? (
           <p className="text-sm text-accent" role="status">
-            {message}
+            {authState.message}
           </p>
         ) : null}
 
         <button
           type="submit"
           className="btn-primary focus-ring w-full text-base"
-          disabled={!authReady || pending || googlePending}
+          disabled={!authReady || actionPending || googlePending}
         >
-          {pending
+          {actionPending
             ? mode === "login"
               ? "Signing in…"
               : "Creating…"
