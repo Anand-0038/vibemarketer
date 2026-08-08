@@ -74,7 +74,7 @@ export async function signInWithPassword(
     ) {
       return {
         error:
-          "Please confirm your email first. Check your inbox for a confirmation link, then try signing in again.",
+          "This account still needs email confirmation. If no message arrives, email delivery is not configured for this deployment; use a different address or ask the owner to configure SMTP.",
       };
     }
     return { error: "Invalid email or password." };

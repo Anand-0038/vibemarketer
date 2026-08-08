@@ -1,7 +1,9 @@
 # Live provider gate
 
-The Zerops deployment is healthy, but the product demo must not claim a live
-campaign until the required providers have returned real responses. Add
+The Zerops deployment is healthy, and the core brand-to-campaign-to-draft
+demo has returned real OpenAI and Zerops PostgreSQL responses. The product
+demo must not claim provider-confirmed publication until the required
+publishing provider has returned a real response. Add
 secrets in the Zerops project environment only; never commit them or paste
 their values into chat.
 
@@ -52,7 +54,9 @@ records `published` after the provider returns a valid external identifier.
 
 After adding the secrets through Zerops, verify in this order:
 
-1. Open the public web URL and sign in with a real Supabase Auth account.
+1. Open the public web URL and sign in with a real Supabase Auth account. The
+   current challenge Auth project uses autoconfirm because its default shared
+   mailer is not a general delivery service; no confirmation email is claimed.
 2. Submit a real product URL through the brand-intake flow.
 3. Confirm the direct HTTP or Firecrawl extraction, OpenAI response, and
    Zerops PostgreSQL brand state after refresh. Supermemory is optional

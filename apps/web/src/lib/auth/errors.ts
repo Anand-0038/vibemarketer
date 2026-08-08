@@ -25,7 +25,8 @@ export function signupOutcome(input: {
   }
   return {
     kind: "confirmation",
-    message: "Check your email to confirm your account, then sign in.",
+    message:
+      "This account still needs email confirmation. If no message arrives, email delivery is not configured for this deployment; use a different address or ask the owner to configure SMTP.",
   };
 }
 

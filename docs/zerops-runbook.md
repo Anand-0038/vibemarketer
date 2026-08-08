@@ -54,14 +54,14 @@ continue to the protected app without pretending that an email was delivered.
 For a normal production release, set autoconfirm back to `false` and configure
 a custom SMTP provider before relying on email confirmation.
 
-If a signup attempt says to check email but no message arrives, first check
-whether the address already has an account. Supabase deliberately returns an
-empty identity list for existing addresses in some signup responses; the web
-app now reports that case as an existing account so the user can sign in
-instead. New accounts in the current challenge configuration are activated
-immediately and do not require an email. To provide real confirmation emails
-for arbitrary users, configure custom SMTP in the Supabase Auth settings and
-only then turn autoconfirm off.
+If a signup attempt says the account needs confirmation but no message arrives,
+first check whether the address is an older pending account. Supabase
+deliberately returns an empty identity list for existing addresses in some
+signup responses; the web app reports that case as an existing account so the
+user can sign in instead. New accounts in the current challenge configuration
+are activated immediately and do not require an email. To provide real
+confirmation emails for arbitrary users, configure custom SMTP in the Supabase
+Auth settings and only then turn autoconfirm off.
 
 ## Deploy
 

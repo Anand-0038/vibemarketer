@@ -1,7 +1,7 @@
 # VibeMarketer — Zerops Challenge plan
 
-Status: Web checkpoint live on Zerops; worker and provider-confirmed publish
-path remain staged deployment gates.
+Status: Core URL-to-draft slice live on Zerops; provider-confirmed publish,
+demo assets, social post, and official submission remain open gates.
 
 Audit date: 2026-08-08
 
@@ -48,9 +48,10 @@ The current Zerops project is `0xanand` (`IzGL13uGTKeL0Cg8qBNvjw`) in the
 `Anand-0038` organization. `web`, `db`, `nats`, and `worker` are provisioned.
 The web checkpoint is live at
 `https://web-2b24-3000.prg1.zerops.app`; `/`, `/login`, `/app`, static assets,
-and `/api/ready` were verified externally. The worker still needs its first
-deployment and `INTERNAL_WORKER_SECRET` before the private async publish path
-can be claimed as live.
+and `/api/ready` were verified externally. The worker is also provisioned and
+live-checked against NATS and the private drain boundary. The remaining
+deployment gate is a provider-confirmed publication with a real connected
+social account.
 
 ## 1. What already works
 
@@ -127,7 +128,7 @@ available.
 
 ## 2. What is incomplete, unsupported, or unverified
 
-### Web checkpoint is live; worker path is not yet live
+### Web, database, and worker checkpoints are live
 
 - Root `zerops.yaml` defines the web and private publishing-worker runtimes.
 - The authenticated project inventory contains `web`, `db`, `nats`, and
@@ -137,8 +138,8 @@ available.
   `/login` return `200`, `/app` redirects to `/login`, static assets return
   `200`, and `/api/ready` returns `{ "ok": true }`.
 - The web health check has exercised the direct Zerops PostgreSQL adapter and
-  created/validated its application schema. NATS and the private worker still
-  need a live connection check.
+  created/validated its application schema. The live URL-to-brand-to-campaign-
+  to-draft smoke also persisted state through the Zerops PostgreSQL path.
 - The project-local `.mcp.json` is tokenless setup metadata, not proof that
   ZCP can call the project.
 
@@ -156,13 +157,14 @@ available.
   are succeeding after the shared-secret restart. A provider-confirmed
   attempt remains outstanding.
 
-### Persistence migration is implemented but live verification is pending
+### Persistence migration and core live flow are verified
 
 - The compatibility path still uses the Supabase Data API/service-role client
   outside Zerops.
 - Zerops production now selects direct PostgreSQL adapters for marketing state
-  and publish-attempt/outbox state, with schema creation on first use. This
-  must still be verified against the provisioned `db` service.
+  and publish-attempt/outbox state, with schema creation on first use. The
+  deployed brand, campaign, and draft smoke verified the marketing path against
+  the provisioned `db` service.
 - `apps/web/src/lib/postgres-dual.ts` is a VC Brain dual-write path; it is not
   a PostgreSQL adapter for the marketing store or publishing repository.
 - `supabase/` contains both Auth assumptions and application schema/RPCs.
@@ -193,8 +195,9 @@ or provider publishing without the relevant credentials and connected
 accounts. The following must be configured and tested at the actual deployment
 boundary before they appear in demo copy:
 
-- Firecrawl and OpenAI for brand extraction and drafts
-- Supermemory for retrieval-backed brand memory
+- OpenAI for brand extraction, campaign planning, and drafts
+- Firecrawl for optional richer crawling and Supermemory for optional retrieval
+  enrichment; the deployed core path does not require either key
 - Tavily and optional research providers for market evidence
 - Composio plus an active X, LinkedIn, or Reddit connection for publication
 - Supabase Auth keys while Auth remains external
@@ -241,7 +244,7 @@ worker restart does not erase a publish attempt.
 | Supabase marketing store | `marketing-store.ts`, `supabase-admin.ts`, `marketing_state` migration | Zerops runtime selects the PostgreSQL adapter; non-Zerops deployments retain the compatibility path. |
 | Supabase publish repository | `publish-attempt-repo.ts`, publish outbox migrations/RPCs | Zerops runtime selects the PostgreSQL lease/idempotency adapter; preserve the existing service contract and tests. |
 | Supabase VC Brain dual write | `postgres-dual.ts`, VC migrations | Leave unchanged for the secondary workflow until marketing persistence is stable. |
-| Firecrawl/OpenAI/Supermemory | brand/campaign/draft routes and engine connectors | Keep server-only env secrets; verify real calls in the deployed flow. |
+| OpenAI, optional Firecrawl/Supermemory | brand/campaign/draft routes and engine connectors | Keep server-only env secrets; the live core path labels direct HTTP plus Zerops PostgreSQL when optional enrichment is absent. |
 | Composio | engine connector and `/api/composio/connect` | Keep real OAuth/provider confirmation; no fixture account or fabricated post ID. |
 | Local JSON | `MARKETING_STORE_BACKEND=local`, `data/` paths | Keep only for local tests/offline development; never enable it in Zerops. |
 | Demo/auth bypass switches | `AUTH_BYPASS`, `ALLOW_OPEN_APP`, `NEXT_PUBLIC_DEMO_DEFAULTS` | Set to disabled/absent in Zerops; add a startup/readiness check that rejects unsafe production combinations. |
@@ -468,12 +471,17 @@ The judge should understand the product before seeing the infrastructure.
    status.
 3. Generate a campaign or one X/LinkedIn/Reddit draft from the stored memory.
 4. Open the HITL queue and edit/reject/approve one draft.
-5. Show the publish attempt changing from pending to worker execution.
+5. Show the publish attempt changing from pending to worker execution once a
+   real provider account is connected.
 6. Show the Zerops service view or logs: `web`, `db`, `nats`, and `worker`.
 7. Show the real provider-confirmed post ID/URL, or clearly show the blocked
    unavailable state if the account is not connected.
 8. Open the report/execution record and explain that a green queue state is
    not the same thing as a provider-confirmed publication.
+
+The core URL-to-draft path is already verified on the live deployment. The
+provider-confirmed portion remains intentionally unclaimed until Composio and
+one connected social account return a real external identifier.
 
 The final demo should use only links and states that were verified after the
 last deployment. The public URL, repository, video, social post, and

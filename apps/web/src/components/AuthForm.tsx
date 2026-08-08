@@ -61,6 +61,13 @@ export function AuthForm({
                 ? "Create an account with Google or email and password (8+ characters, include a letter and a number)."
                 : "Create an account with email and password (8+ characters, include a letter and a number)."}
           </p>
+          {mode === "signup" ? (
+            <p className="mt-3 text-sm text-muted">
+              New accounts in this deployment activate immediately. If an older
+              account asks for confirmation and no message arrives, use a
+              different address or contact the service owner.
+            </p>
+          ) : null}
 
           {!authReady ? (
             <div

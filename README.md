@@ -66,7 +66,7 @@ flowchart LR
         drain --> web
     end
 
-    web --> research[Research and model providers - Firecrawl - OpenAI - Supermemory]
+    web --> research[Research and model providers - OpenAI - optional Firecrawl/Supermemory]
     worker --> publish[Composio and connected provider - LinkedIn - X - Reddit]
 ```
 
@@ -135,6 +135,8 @@ durable queue, private worker network, health checks, and deployment surface.
   source of truth for idempotency, leases, retries, and provider outcomes.
 - The staged architecture and verification evidence are documented in
   [`docs/ZEROPS-HACK-PLAN.md`](docs/ZEROPS-HACK-PLAN.md).
+- The redacted live smoke evidence is recorded in
+  [`docs/LIVE-DEMO-EVIDENCE.md`](docs/LIVE-DEMO-EVIDENCE.md).
 - The exact provider requirements and verification order are documented in
   [`docs/PROVIDER-SETUP.md`](docs/PROVIDER-SETUP.md).
 - Live Zerops web deployment: [`web-2b24-3000.prg1.zerops.app`](https://web-2b24-3000.prg1.zerops.app)

@@ -56,5 +56,6 @@ available.
 - [x] Repository URL is correct and judge-accessible
 - [x] Live Zerops deployment is reachable
 - [x] Deployment has the required architecture and is more than Hello World
+- [x] Core live URL → brand memory → campaign → draft smoke is verified
 - [ ] Social build post is published
 - [ ] Official submission form is completed before the deadline
