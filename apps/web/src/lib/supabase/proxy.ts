@@ -9,6 +9,10 @@ import {
 } from "@/lib/supabase/config";
 
 function isPublicApi(path: string): boolean {
+  // Email credentials are exchanged only with this same-origin server route;
+  // it must be reachable before a session exists. The route validates input,
+  // rate-limits attempts, and never places credentials in a redirect URL.
+  if (path === "/api/auth/email") return true;
   if (path === "/api/waitlist" || path.startsWith("/api/waitlist/")) return true;
   if (path === "/api/apply" || path.startsWith("/api/apply/")) return true;
   if (path === "/api/checkout" || path.startsWith("/api/checkout/")) return true;
