@@ -1,7 +1,7 @@
 # Zerops runtime definitions for the existing VibeMarketer SaaS.
-# Supabase Auth remains external for this hackathon slice. The managed
-# PostgreSQL service remains the next persistence migration boundary; NATS and
-# the private worker are wired to the durable publishing outbox.
+# Supabase Auth remains external for this hackathon slice. Managed PostgreSQL
+# stores marketing and publishing state; NATS and the private worker are wired
+# to the durable publishing outbox.
 zerops:
   - setup: web
     build:

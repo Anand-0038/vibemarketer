@@ -200,26 +200,28 @@ Missing credentials must continue to produce an explicit unavailable state.
 Browser
   |
   v
-Next.js web + API routes (apps/web)
+Zerops web (Next.js + API routes)
   |-- Supabase Auth session
-  |-- Supabase service-role Data API
-  |     |-- marketing_state (brand/posts/campaign/loops/report state)
-  |     |-- publishing attempts and outbox jobs
-  |     `-- VC Brain tables
+  |-- Zerops PostgreSQL
+  |     |-- marketing state (brand/posts/campaign/loops/report state)
+  |     `-- publishing attempts and outbox jobs
+  |-- NATS JetStream wake-up subject
   |
   |-- @vibe/engine
   |     |-- Firecrawl / Tavily / OpenAI / Supermemory
   |     |-- Composio account links and provider execution
   |     `-- research, memory, agents, scoring and traces
   |
-  `-- /api/internal/publishing/drain
-        `-- executes the DB outbox in the web process
+  `-- private /api/internal/publishing/drain compatibility path
+          ^
+          |
+Zerops worker (Node/TypeScript)
+  `-- NATS consumer -> private web drain -> provider confirmation
 ```
 
-This architecture is already more reliable than a static demo, but its
-asynchronous work is coupled to a request-serving process and its application
-persistence is coupled to Supabase. That is the exact infrastructure gap the
-Zerops work should close.
+The database outbox remains authoritative for idempotency, leases, retries,
+and provider outcomes. NATS only wakes the private worker, so a broker or
+worker restart does not erase a publish attempt.
 
 ## 4. Vercel, Supabase, and provider dependencies
 
@@ -229,8 +231,8 @@ Zerops work should close.
 | Vercel runtime detection | `VERCEL` in `marketing-store.ts` | Add an explicit `ZEROPS` production marker and make production store selection independent of the hosting vendor. |
 | Vercel auth safety | `VERCEL_ENV` in `supabase/config.ts` | Treat `ZEROPS=1`/`ZEROPS_ENV=production` as hosted production and fail closed when Auth is not configured. |
 | Supabase Auth | `@supabase/ssr`, `supabase/server.ts`, `auth.ts`, auth callbacks/middleware | Keep for the hackathon unless a separate auth migration is proven safer. |
-| Supabase marketing store | `marketing-store.ts`, `supabase-admin.ts`, `marketing_state` migration | Port to Zerops PostgreSQL behind the same store interface after the baseline web deployment. |
-| Supabase publish repository | `publish-attempt-repo.ts`, publish outbox migrations/RPCs | Recreate the lease/idempotency SQL in Zerops PostgreSQL; preserve the existing service contract and tests. |
+| Supabase marketing store | `marketing-store.ts`, `supabase-admin.ts`, `marketing_state` migration | Zerops runtime selects the PostgreSQL adapter; non-Zerops deployments retain the compatibility path. |
+| Supabase publish repository | `publish-attempt-repo.ts`, publish outbox migrations/RPCs | Zerops runtime selects the PostgreSQL lease/idempotency adapter; preserve the existing service contract and tests. |
 | Supabase VC Brain dual write | `postgres-dual.ts`, VC migrations | Leave unchanged for the secondary workflow until marketing persistence is stable. |
 | Firecrawl/OpenAI/Supermemory | brand/campaign/draft routes and engine connectors | Keep server-only env secrets; verify real calls in the deployed flow. |
 | Composio | engine connector and `/api/composio/connect` | Keep real OAuth/provider confirmation; no fixture account or fabricated post ID. |
