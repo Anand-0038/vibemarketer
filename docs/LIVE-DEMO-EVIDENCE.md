@@ -8,8 +8,8 @@ identifiers, or provider secrets.
 
 - Date: 2026-08-08 UTC
 - Repository: `https://github.com/Anand-0038/vibemarketer`
-- Verified deployed commit: `c744b24`
-- Repository evidence commit: `69a628a`
+- Verified deployed commit: `b39ea16`
+- Repository evidence commit: `b39ea16`
 - Zerops URL: `https://web-2b24-3000.prg1.zerops.app`
 - Zerops project: `0xanand`
 - Active services: `web`, managed `db` PostgreSQL, `nats`, private `worker`
