@@ -795,6 +795,9 @@ in Zerops before the authenticated research/publishing demo can be claimed.
   submitted Medium URL should be supplemented with the prepared build post if
   the social track is pursued. No provider success is claimed without real
   credentials and a returned provider identifier.
+- The worker runtime was then reduced to a 1.4 MiB deploy artifact (333.5 KiB
+  uploaded) by packaging only compiled production files and `nats`; the live
+  rollout started with `node dist/index.js` and reconnected to JetStream.
 - The Zerops callback URL is now allowlisted in the external Supabase Auth
   project. The challenge Auth configuration uses autoconfirm because the
   default shared Supabase mailer is restricted to authorized team addresses;

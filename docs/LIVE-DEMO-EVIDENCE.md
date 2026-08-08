@@ -8,12 +8,14 @@ identifiers, or provider secrets.
 
 - Date: 2026-08-08 UTC
 - Repository: `https://github.com/Anand-0038/vibemarketer`
-- Verified application source commit: `0556638`
-- Zerops web rollout containing that source completed at 2026-08-08 21:25 UTC;
-  the public production gate passed 9/9 checks after rollout. The browser auth
-  and product smoke recorded below was run against the same deployed auth and
-  marketing path; the latest rollout changes only the private publishing
-  status read path and product-facing architecture copy.
+- Verified web source commit: `df282af`
+- Verified worker/deployment-manifest commit: `4065282`
+- Zerops web rollout containing the verified web source completed at 2026-08-08
+  21:34 UTC; the public production gate passed 9/9 checks after rollout. The
+  private worker rollout containing `4065282` completed at 21:43 UTC and
+  started successfully with the pruned runtime bundle. The browser auth and
+  product smoke recorded below was run against the same deployed auth and
+  marketing path.
 - Zerops URL: `https://web-2b24-3000.prg1.zerops.app`
 - Zerops project: `0xanand`
 - Active services: `web`, managed `db` PostgreSQL, `nats`, private `worker`
@@ -83,6 +85,9 @@ smoke.
   `VIBEMARKETER_MARKETING` JetStream stream with explicit credentials, then
   completed private drain polling after the shared internal secret was
   activated.
+- The worker build deploys a 1.4 MiB production artifact (333.5 KiB uploaded)
+  containing only its compiled runtime and production dependencies; the full
+  monorepo remains build-only input.
 - Internal database, NATS, and worker services are not public application
   endpoints.
 
