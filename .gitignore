@@ -12,8 +12,6 @@ coverage/
 .DS_Store
 
 # Secrets
-.env
-.env.*
 !.env.example
 .mcp.json
 .zcp/state/
@@ -51,3 +49,7 @@ sqlite_mcp_server.db
 # Local notes
 idea.md
 CLAUDE.local.md
+branch_structure.json
+temp_auto_push.bat
+temp_interactive_push.bat
+config.bat
