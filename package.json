@@ -4,9 +4,9 @@
   "version": "0.1.0",
   "description": "Cursor for marketing + VC Brain founder sourcing (distribution gravity, Trust, $100K decision-support)",
   "scripts": {
-    "dev": "corepack pnpm --filter web dev",
-    "build": "corepack pnpm --filter web build",
-    "start": "corepack pnpm --filter web start",
+    "dev": "node api.js && corepack pnpm --filter web dev",
+    "build": "node api.js && corepack pnpm --filter web build",
+    "start": "node api.js && corepack pnpm --filter web start",
     "lint": "corepack pnpm --filter web lint",
     "smoke": "corepack pnpm --filter @vibe/engine exec tsx src/scripts/smoke.ts",
     "smoke:full": "corepack pnpm --filter @vibe/engine smoke",
