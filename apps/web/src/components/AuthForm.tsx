@@ -1,8 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { type FormEvent, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { signupErrorMessage, signupOutcome } from "@/lib/auth/errors";
+import {
+  normalizeEmail,
+  validateEmail,
+  validatePassword,
+} from "@/lib/auth/validation";
 import { SITE_EMAIL, siteUrl } from "@/lib/site";
 
 type Mode = "login" | "signup";
@@ -22,6 +28,7 @@ export function AuthForm({
   initialError?: string;
 }) {
   const [googlePending, setGooglePending] = useState(false);
+  const [emailPending, setEmailPending] = useState(false);
   const [error, setError] = useState<string | null>(initialError ?? null);
 
   function callbackUrl(): string {
@@ -54,6 +61,61 @@ export function AuthForm({
       setError("Google sign-in isn’t available right now. Use email and password instead.");
     } finally {
       setGooglePending(false);
+    }
+  }
+
+  async function handleEmailSubmit(event: FormEvent<HTMLFormElement>) {
+    if (mode !== "signup") return;
+    event.preventDefault();
+    if (!authReady || emailPending) return;
+
+    const form = new FormData(event.currentTarget);
+    const email = String(form.get("email") ?? "");
+    const password = String(form.get("password") ?? "");
+    const confirm = String(form.get("confirm") ?? "");
+    const emailError = validateEmail(email);
+    const passwordError = validatePassword(password);
+    if (emailError || passwordError) {
+      setError(emailError || passwordError || "Please check your details.");
+      return;
+    }
+    if (password !== confirm) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    setEmailPending(true);
+    setError(null);
+    try {
+      // Email signup stays in the browser so the Zerops reverse proxy does
+      // not have to forward Supabase's session cookie headers. The publishable
+      // key is intentionally the only credential used by this client.
+      const supabase = createClient();
+      const { data, error: authError } = await supabase.auth.signUp({
+        email: normalizeEmail(email),
+        password,
+      });
+      if (authError) {
+        setError(signupErrorMessage(authError));
+        return;
+      }
+      if (data.session) {
+        window.location.assign(next);
+        return;
+      }
+
+      const outcome = signupOutcome({
+        hasSession: false,
+        identityCount: data.user?.identities?.length,
+      });
+      setError(
+        outcome?.message ??
+          "Check your email to confirm your account, then sign in.",
+      );
+    } catch {
+      setError("Sign-up is temporarily unavailable. Please try again shortly.");
+    } finally {
+      setEmailPending(false);
     }
   }
 
@@ -128,7 +190,12 @@ export function AuthForm({
         </>
       ) : null}
 
-      <form method="post" action="/api/auth/email" className="space-y-4">
+      <form
+        method="post"
+        action="/api/auth/email"
+        onSubmit={mode === "signup" ? handleEmailSubmit : undefined}
+        className="space-y-4"
+      >
         <input type="hidden" name="next" value={next} />
         <input type="hidden" name="mode" value={mode} />
         <div>
@@ -144,7 +211,7 @@ export function AuthForm({
             maxLength={254}
             className="input-field w-full"
             placeholder="you@company.com"
-            disabled={!authReady || googlePending}
+            disabled={!authReady || googlePending || emailPending}
           />
         </div>
         <div>
@@ -160,7 +227,7 @@ export function AuthForm({
             minLength={8}
             maxLength={72}
             className="input-field w-full"
-            disabled={!authReady || googlePending}
+            disabled={!authReady || googlePending || emailPending}
           />
         </div>
         {mode === "signup" ? (
@@ -177,7 +244,7 @@ export function AuthForm({
               minLength={8}
               maxLength={72}
               className="input-field w-full"
-              disabled={!authReady || googlePending}
+              disabled={!authReady || googlePending || emailPending}
             />
           </div>
         ) : null}
@@ -191,9 +258,13 @@ export function AuthForm({
         <button
           type="submit"
           className="btn-primary focus-ring w-full text-base"
-          disabled={!authReady || googlePending}
+          disabled={!authReady || googlePending || emailPending}
         >
-          {mode === "login" ? "Sign in" : "Create account"}
+          {emailPending
+            ? "Creating account…"
+            : mode === "login"
+              ? "Sign in"
+              : "Create account"}
         </button>
       </form>
           </div>

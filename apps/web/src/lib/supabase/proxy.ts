@@ -47,6 +47,7 @@ export async function updateSession(request: NextRequest) {
     getSupabasePublishableKey()!,
     {
       cookies: {
+        encode: "tokens-only",
         getAll() {
           return request.cookies.getAll();
         },

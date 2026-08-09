@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { type NextRequest, NextResponse } from "next/server";
 import { checkRateLimit, clientKeyFromHeaders } from "@/lib/auth/rate-limit";
 import { signupErrorMessage, signupOutcome } from "@/lib/auth/errors";
+import { getSignupOptions } from "@/lib/auth/signup-options";
 import {
   normalizeEmail,
   validateEmail,
@@ -74,77 +75,91 @@ export async function POST(req: NextRequest) {
   // Create the response before the Supabase client so session cookies are
   // attached to the exact redirect response returned by this route handler.
   const response = redirectToNext(next);
-  const cookieStore = await cookies();
-  const supabase = createServerClient(
-    getSupabaseUrl()!,
-    getSupabasePublishableKey()!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cookiesToSet) {
-          for (const { name, value, options } of cookiesToSet) {
-            try {
-              cookieStore.set(name, value, options);
-            } catch {
-              // The response cookie below is the authoritative path in a
-              // Route Handler; the request cookie store can be read-only.
+  response.headers.set("Cache-Control", "private, no-store");
+
+  try {
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+      getSupabaseUrl()!,
+      getSupabasePublishableKey()!,
+      {
+        cookies: {
+          // Keep auth cookies small enough for the Zerops proxy. The user is
+          // fetched and validated server-side from the access token; the full
+          // user object does not need to be duplicated in the cookie.
+          encode: "tokens-only",
+          getAll() {
+            return cookieStore.getAll();
+          },
+          setAll(cookiesToSet, responseHeaders) {
+            for (const { name, value, options } of cookiesToSet) {
+              try {
+                cookieStore.set(name, value, options);
+              } catch {
+                // The response cookie below is the authoritative path in a
+                // Route Handler; the request cookie store can be read-only.
+              }
+              response.cookies.set(name, value, options);
             }
-            response.cookies.set(name, value, options);
-          }
+            for (const [name, value] of Object.entries(responseHeaders)) {
+              response.headers.set(name, value);
+            }
+          },
         },
       },
-    },
-  );
+    );
 
-  if (mode === "login") {
-    const { error } = await supabase.auth.signInWithPassword({
+    if (mode === "login") {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: normalizeEmail(email),
+        password,
+      });
+      if (error) {
+        const code = (error as { code?: string }).code ?? "";
+        const message = (error.message || "").toLowerCase();
+        return redirectToAuth(
+          req,
+          mode,
+          next,
+          code === "email_not_confirmed" || message.includes("email not confirmed")
+            ? "unconfirmed"
+            : "invalid",
+        );
+      }
+      return response;
+    }
+
+    const { data, error } = await supabase.auth.signUp({
       email: normalizeEmail(email),
       password,
+      options: getSignupOptions(next),
     });
     if (error) {
-      const code = (error as { code?: string }).code ?? "";
-      const message = (error.message || "").toLowerCase();
+      const message = signupErrorMessage(error);
       return redirectToAuth(
         req,
         mode,
         next,
-        code === "email_not_confirmed" || message.includes("email not confirmed")
-          ? "unconfirmed"
-          : "invalid",
+        message.includes("confirmation") ? "confirmation" : "unavailable",
       );
     }
-    return response;
-  }
 
-  const { data, error } = await supabase.auth.signUp({
-    email: normalizeEmail(email),
-    password,
-    options: {
-      emailRedirectTo: `${siteUrl("/auth/callback")}?next=${encodeURIComponent(next)}`,
-    },
-  });
-  if (error) {
-    const message = signupErrorMessage(error);
-    return redirectToAuth(
-      req,
-      mode,
-      next,
-      message.includes("confirmation") ? "confirmation" : "unavailable",
-    );
-  }
+    if (data.session) return response;
 
-  if (data.session) return response;
-
-  const outcome = signupOutcome({
-    hasSession: false,
-    identityCount: data.user?.identities?.length,
-  });
-  if (outcome?.kind === "existing_account") {
-    return redirectToAuth(req, mode, next, "existing");
+    const outcome = signupOutcome({
+      hasSession: false,
+      identityCount: data.user?.identities?.length,
+    });
+    if (outcome?.kind === "existing_account") {
+      return redirectToAuth(req, mode, next, "existing");
+    }
+    return redirectToAuth(req, mode, next, "confirmation");
+  } catch {
+    // Keep transient provider/network failures inside the auth UX. Returning
+    // a redirect prevents the platform from converting the exception to a
+    // generic 502 response.
+    return redirectToAuth(req, mode, next, "unavailable");
   }
-  return redirectToAuth(req, mode, next, "confirmation");
 }
 
 export async function GET() {

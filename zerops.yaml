@@ -43,6 +43,7 @@ zerops:
         NEXT_PUBLIC_SITE_URL: https://web-2b24-3000.prg1.zerops.app
         NEXT_PUBLIC_SUPABASE_URL: https://sdfahtxjywitbujjjlny.supabase.co
         NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "sb_publishable_-7401vYmixYapr-8dIL_Ww_qaIpvGCn"
+        SUPABASE_EMAIL_CONFIRMATION_REQUIRED: "0"
         DATABASE_URL: ${db_connectionString}
         NATS_URL: ${nats_connectionString}
         NATS_USER: ${nats_user}

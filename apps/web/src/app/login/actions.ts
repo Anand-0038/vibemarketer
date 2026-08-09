@@ -11,6 +11,7 @@ import {
   signupErrorMessage,
   signupOutcome,
 } from "@/lib/auth/errors";
+import { getSignupOptions } from "@/lib/auth/signup-options";
 import {
   normalizeEmail,
   validateEmail,
@@ -106,15 +107,20 @@ export async function signUpWithPassword(
     return { error: "Passwords do not match." };
   }
 
-  const { siteUrl } = await import("@/lib/site");
   const supabase = await createClient();
-  const { data, error } = await supabase.auth.signUp({
-    email: normalizeEmail(emailRaw),
-    password,
-    options: {
-      emailRedirectTo: `${siteUrl("/auth/callback")}?next=${encodeURIComponent(next)}`,
-    },
-  });
+  let data;
+  let error;
+  try {
+    ({ data, error } = await supabase.auth.signUp({
+      email: normalizeEmail(emailRaw),
+      password,
+      options: getSignupOptions(next),
+    }));
+  } catch {
+    return {
+      error: "Sign-up is temporarily unavailable. Please try again shortly.",
+    };
+  }
 
   if (error) {
     // Generic message — avoid account enumeration.

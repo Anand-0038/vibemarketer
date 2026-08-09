@@ -17,6 +17,7 @@ export async function createClient() {
 
   return createServerClient(getSupabaseUrl()!, getSupabasePublishableKey()!, {
     cookies: {
+      encode: "tokens-only",
       getAll() {
         return cookieStore.getAll();
       },
