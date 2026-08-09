@@ -61,6 +61,44 @@ function headers(key: string): Record<string, string> {
   };
 }
 
+function isLikelyPlaceholderClientId(value: string): boolean {
+  const normalized = value.trim().toLowerCase();
+  return (
+    normalized.length < 8 ||
+    ["undefined", "null", "test", "demo", "replace", "clientid", "todo", "changeme"].includes(
+      normalized,
+    ) ||
+    /^(?:your|demo)[-_]?[a-z]{3,}$/i.test(normalized)
+  );
+}
+
+function inspectOAuthRedirect(toolkit: string, redirectUrl: string): string | null {
+  let parsed: URL;
+  try {
+    parsed = new URL(redirectUrl);
+  } catch {
+    return `Composio returned an invalid redirect URL for ${toolkit}.`;
+  }
+
+  if (!/^https?:$/i.test(parsed.protocol)) {
+    return `Composio returned a non-HTTP(S) redirect for ${toolkit}.`;
+  }
+
+  if (!parsed.host.endsWith("reddit.com")) {
+    return null;
+  }
+
+  const clientId = parsed.searchParams.get("client_id")?.trim() || "";
+  if (!clientId) {
+    return "Reddit OAuth URL is missing client_id. Configure Reddit app credentials in Composio before trying again.";
+  }
+  if (!/^[A-Za-z0-9_-]{10,}$/i.test(clientId) || isLikelyPlaceholderClientId(clientId)) {
+    return "Reddit OAuth returned an invalid client_id. Check the Composio Reddit toolkit app credentials.";
+  }
+
+  return null;
+}
+
 /** Map UI toolkit ids → Composio toolkit slugs. */
 export function normalizeToolkitSlug(toolkit: string): string {
   const t = toolkit.trim().toLowerCase();
@@ -236,6 +274,16 @@ export async function getConnectLink(
         message: "Composio link OK but no redirect_url in response",
       };
     }
+
+    const redirectProblem = inspectOAuthRedirect(tk, body.redirect_url);
+    if (redirectProblem) {
+      return {
+        status: "error",
+        toolkit: tk,
+        message: redirectProblem,
+      };
+    }
+
     return {
       status: "ok",
       url: body.redirect_url,

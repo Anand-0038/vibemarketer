@@ -93,18 +93,18 @@ export default function AppHomePage() {
     <div>
       <p className="section-label mb-3">Command center</p>
       <h1 className="font-display text-4xl font-bold tracking-tight sm:text-5xl">
-        vibemarketer app
+        AI marketing command center
       </h1>
       <p className="mt-4 max-w-xl text-base leading-relaxed text-muted">
-        Primary product is the AI CMO desk. VC Brain stays available as the
-        founder-sourcing add-on on the same engine.
+        Turn a product URL into a launch plan, approved drafts, and real publish
+        attempts — with no fake publishing status.
       </p>
 
-      <div className="panel mt-8 max-w-xl border-accent/40 p-5">
-        <p className="section-label mb-1 text-accent">Start here</p>
+      <div className="panel mt-8 max-w-3xl border-accent/40 p-5">
+        <p className="section-label mb-1 text-accent">Build loop in 4 steps</p>
         <p className="text-sm leading-relaxed text-muted">
-          CMO desk · brand · site health · agents feed · chat — inspired by
-          modern AI CMO terminals, built for founder HITL.
+          1) Onboard your brand URL · 2) Generate drafts · 3) Review in HITL queue ·
+          4) Connect channels and publish only after provider confirmation.
         </p>
         {snap ? (
           <p className="mt-3 font-mono text-[11px] text-muted">
@@ -164,22 +164,22 @@ export default function AppHomePage() {
           {
             href: "/app/cmo",
             title: "CMO desk",
-            blurb: "Agents feed · GEO scores · chat",
+            blurb: "Read brand memory, run diagnostics, and open launch actions.",
           },
           {
             href: "/app/studio",
             title: "Studio",
-            blurb: "Reddit · HN · SEO · social drafts",
+            blurb: "Generate social drafts for Reddit, X, LinkedIn and more.",
           },
           {
             href: "/app/queue",
             title: "HITL queue",
-            blurb: "Approve · never fake publish",
+            blurb: "Review drafts, edit, approve, or cancel before publishing.",
           },
           {
             href: "/app/report",
             title: "Weekly report",
-            blurb: "LEARN rollup",
+            blurb: "Get a plain-language execution summary after runs.",
           },
         ].map((i) => (
           <li key={i.href}>
@@ -187,10 +187,10 @@ export default function AppHomePage() {
               href={i.href}
               className="panel block p-4 transition hover:border-accent/40"
             >
-              <h2 className="font-display text-lg font-semibold text-ink">
+            <h2 className="font-display text-lg font-semibold text-ink">
                 {i.title}
-              </h2>
-              <p className="mt-1 text-sm text-muted">{i.blurb}</p>
+            </h2>
+            <p className="mt-1 text-sm text-muted">{i.blurb}</p>
             </Link>
           </li>
         ))}
@@ -202,12 +202,12 @@ export default function AppHomePage() {
           {
             href: "/app/radar",
             title: "Founder radar",
-            blurb: "Distribution gravity ranking",
+            blurb: "See where your startup appears strongest right now.",
           },
           {
             href: "/app/compare",
             title: "Gravity compare",
-            blurb: "Cold-start vs pedigree",
+            blurb: "Benchmark momentum against past campaigns and peers.",
           },
         ].map((i) => (
           <li key={i.href}>

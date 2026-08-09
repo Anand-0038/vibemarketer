@@ -18,7 +18,7 @@ const fleetItems = [
   { href: "/app/queue", label: "HITL queue" },
   { href: "/app/memory", label: "Brand memory" },
   { href: "/app/report", label: "Weekly report" },
-  { href: "/app/connectors", label: "Connect OAuth" },
+  { href: "/app/connectors", label: "Connect channels" },
 ];
 
 const loopItems = [
@@ -55,13 +55,18 @@ function NavLink({
     <Link
       href={href}
       prefetch
-      className={`focus-ring block border-l-2 px-3 py-2 text-sm transition-colors ${
+      aria-current={active ? "page" : undefined}
+      className={`focus-ring flex items-center gap-2.5 border-l-2 px-3 py-2.5 text-sm transition-colors ${
         active
-          ? "border-accent bg-accent/10 text-accent"
+          ? "border-accent bg-accent/10 font-medium text-ink"
           : "border-transparent text-muted hover:border-line hover:bg-bg-elevated hover:text-ink"
       }`}
     >
-      {label}
+      <span
+        aria-hidden
+        className={`h-1.5 w-1.5 shrink-0 ${active ? "bg-accent" : "bg-line"}`}
+      />
+      <span>{label}</span>
     </Link>
   );
 }
@@ -89,8 +94,8 @@ export function AppShell({
   );
 
   return (
-    <div className="site-shell flex min-h-[calc(100vh-0px)] flex-col gap-8 py-8 md:flex-row md:gap-10">
-      <aside className="w-full shrink-0 border-b border-line pb-5 md:sticky md:top-8 md:max-h-[calc(100vh-4rem)] md:w-56 md:self-start md:overflow-y-auto md:border-b-0 md:border-r md:pb-0 md:pr-6">
+    <div className="site-shell flex min-h-screen flex-col gap-6 py-4 sm:py-6 md:flex-row md:items-start md:gap-8">
+      <aside className="panel w-full shrink-0 p-4 shadow-[5px_5px_0_var(--line)] md:sticky md:top-6 md:max-h-[calc(100vh-3rem)] md:w-64 md:overflow-y-auto md:p-5">
         <div className="flex items-center justify-between gap-3">
           <Link
             href="/"
@@ -115,9 +120,11 @@ export function AppShell({
         </div>
         <div className="hidden md:block">
           <p className="mt-4 font-mono text-[10px] uppercase tracking-widest text-accent">
-            App · AI CMO
+            AI marketing workspace
           </p>
-          <p className="mt-1 font-mono text-[10px] text-muted">⌘K shortcuts</p>
+          <p className="mt-1 text-xs leading-relaxed text-muted">
+            Research → draft → review → publish
+          </p>
         </div>
         <ol className="mt-4 grid grid-cols-5 border border-line md:hidden" aria-label="Marketing loop">
           {loopItems.map((item) => {
@@ -140,7 +147,7 @@ export function AppShell({
             );
           })}
         </ol>
-        <div className="mt-4 flex flex-wrap items-center gap-2">
+        <div className="mt-4 flex flex-wrap items-center gap-2 border-y border-line py-3">
           <AuthNav initialUser={initialUser} />
           <ThemeToggle compact />
         </div>
@@ -187,7 +194,9 @@ export function AppShell({
             : null}
         </nav>
       </aside>
-      <div className="min-w-0 flex-1 rise">{children}</div>
+      <div className="min-w-0 flex-1 pb-10 rise">
+        {children}
+      </div>
       <CommandPalette />
     </div>
   );

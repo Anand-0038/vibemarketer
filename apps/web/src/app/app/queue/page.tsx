@@ -156,6 +156,9 @@ export default function QueuePage() {
   const [creativeBusy, setCreativeBusy] = useState<string | null>(null);
   const [connected, setConnected] = useState<ConnMap>({});
   const [connNote, setConnNote] = useState<string | null>(null);
+  const pendingCount = posts.filter((p) => p.status === "pending").length;
+  const queuedCount = posts.filter((p) => p.status === "queued").length;
+  const publishedCount = posts.filter((p) => p.status === "published").length;
 
   const loadConnections = useCallback(async () => {
     try {
@@ -536,6 +539,19 @@ export default function QueuePage() {
       </div>
 
       <div className="panel mt-6 flex flex-wrap items-center gap-3 p-3">
+        <p className="w-full text-xs text-muted">
+          Queue snapshot ·{" "}
+          <span className="text-ink">Pending {pendingCount}</span> ·{" "}
+          <span className="text-warn">Queued {queuedCount}</span> ·{" "}
+          <span className="text-ok">Published {publishedCount}</span>
+        </p>
+        <button
+          type="button"
+          className="font-mono text-[10px] uppercase tracking-widest text-accent hover:underline"
+          onClick={() => void load(showQueued)}
+        >
+          Refresh queue
+        </button>
         <p className="font-mono text-[10px] uppercase tracking-widest text-muted">
           Live publish ready
         </p>

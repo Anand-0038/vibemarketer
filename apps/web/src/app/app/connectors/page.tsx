@@ -40,6 +40,21 @@ const COMING_SOON = [
   },
 ] as const;
 
+const FLOW_STEPS = [
+  {
+    title: "01 Connect social channel",
+    body: "Connect Reddit, X, or LinkedIn before approval starts turning into action.",
+  },
+  {
+    title: "02 Approve in queue",
+    body: "Generated drafts are safe by default. HITL is required before publish.",
+  },
+  {
+    title: "03 Publish with proof",
+    body: "The system waits for a real provider response and keeps audit trail records.",
+  },
+] as const;
+
 type HealthKey = {
   key: string;
   configured: boolean;
@@ -232,6 +247,15 @@ export default function AppConnectorsPage() {
   const publishReady = ["reddit", "twitter", "linkedin"].filter(
     (id) => connected[id]?.status === "ACTIVE",
   );
+  const publishReadyLabel = publishReady.length
+    ? publishReady.join(" · ")
+    : "none yet";
+  const channelRow = ["reddit", "twitter", "linkedin"].map((id) => ({
+    id,
+    label: id === "twitter" ? "X" : id[0]!.toUpperCase() + id.slice(1),
+    active: connected[id]?.status === "ACTIVE",
+  }));
+  const livePublishEnabled = channelRow.some((row) => row.active);
 
   return (
     <div>
@@ -248,9 +272,7 @@ export default function AppConnectorsPage() {
         </p>
         <p className="mt-2 font-mono text-[11px] text-muted">
           Ready to publish:{" "}
-          {publishReady.length === 0
-            ? "none yet — connect a channel below"
-            : publishReady.join(" · ")}
+          {publishReadyLabel}
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
           <Link
@@ -266,6 +288,47 @@ export default function AppConnectorsPage() {
             Studio drafts
           </Link>
         </div>
+      </div>
+
+      <div className="panel mb-6 border-line p-4">
+        <p className="section-label mb-2 text-accent">Workflow for user journey</p>
+        <p className="text-sm text-muted">
+          Live publishing is blocked until all of this is clear: channel is connected
+          → draft is approved → Composio provider returns a post confirmation.
+        </p>
+        <ol className="mt-3 grid gap-2 sm:grid-cols-3">
+          {FLOW_STEPS.map((step) => (
+            <li
+              key={step.title}
+              className="rounded border border-line bg-bg-elevated p-3 text-sm"
+            >
+              <p className="text-xs uppercase tracking-wider text-muted">
+                {step.title}
+              </p>
+              <p className="mt-1 text-muted">{step.body}</p>
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      <div className="panel mb-6 border-ok/30 p-3 text-xs">
+        <p className="font-mono text-[10px] uppercase tracking-wider text-accent">
+          Channel status at a glance
+        </p>
+        <p className="mt-1">
+          Live publish path is {livePublishEnabled ? "enabled" : "waiting for a channel"}.
+        </p>
+        <p className="mt-2 text-muted">
+          {channelRow.map((row) => (
+            <span
+              key={row.id}
+              className={`mr-3 inline-flex items-center gap-2 ${row.active ? "text-ok" : "text-muted"}`}
+            >
+              <span className={`h-1.5 w-1.5 rounded-full ${row.active ? "bg-ok" : "bg-line"}`} />
+              {row.label}: {row.active ? "Connected" : "Offline"}
+            </span>
+          ))}
+        </p>
       </div>
 
       <div className="panel mb-6 border-line p-3 text-xs text-muted">
@@ -404,9 +467,14 @@ export default function AppConnectorsPage() {
                   </p>
                 ) : null}
                 {status[t.id] && !isActive ? (
-                  <p className="mt-1 break-all font-mono text-[10px] text-accent">
-                    {status[t.id]}
-                  </p>
+                  <div className="mt-1 space-y-1">
+                    <p className="break-all font-mono text-[10px] text-accent">{status[t.id]}</p>
+                    {status[t.id]?.toLowerCase().includes("client_id") ? (
+                      <p className="max-w-lg text-xs text-warn">
+                        Fix this in Composio: verify toolkit credentials are real app values (client id/secret), then retry this flow.
+                      </p>
+                    ) : null}
+                  </div>
                 ) : null}
               </div>
               <button
