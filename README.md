@@ -25,23 +25,22 @@ evidence are documented separately from the product itself.
 
 Failed providers remain visibly unavailable. The product never substitutes fixtures, templates, or fake success for a failed live dependency.
 
-## Product in the browser
+## Latest live screenshots
 
-<p>
-  <a href="https://web-2b24-3000.prg1.zerops.app/">
-    <img src="docs/screenshots/vibemarketer-home.png" alt="VibeMarketer homepage" width="49%" />
-  </a>
-  <a href="https://web-2b24-3000.prg1.zerops.app/product">
-    <img src="docs/screenshots/vibemarketer-product.png" alt="VibeMarketer product page" width="49%" />
-  </a>
-  <a href="https://web-2b24-3000.prg1.zerops.app/login">
-    <img src="docs/screenshots/vibemarketer-login.png" alt="VibeMarketer sign-in page" width="49%" />
-  </a>
-</p>
+The files below are taken from the running Zerops deployment and are intentionally
+small enough for quick judge-friendly review.
 
-The captures above are from the live public application. The dashboard panel
-shown on the homepage is explicitly labelled as illustrative UI; it is not
-presented as a fabricated customer session.
+| Capture | Link | Details |
+| --- | --- | --- |
+| <a href="https://web-2b24-3000.prg1.zerops.app/"><img src="docs/screenshots/vibemarketer-home.png" alt="VibeMarketer landing page with app overview" width="100%" /></a> | [Open app](https://web-2b24-3000.prg1.zerops.app/) | Homepage / product entry points |
+| <a href="https://web-2b24-3000.prg1.zerops.app/product"><img src="docs/screenshots/vibemarketer-product.png" alt="VibeMarketer product/landing details page" width="100%" /></a> | [Open product page](https://web-2b24-3000.prg1.zerops.app/product) | Public SEO-oriented product page |
+| <a href="https://web-2b24-3000.prg1.zerops.app/login"><img src="docs/screenshots/vibemarketer-login.png" alt="VibeMarketer login screen" width="100%" /></a> | [Open login](https://web-2b24-3000.prg1.zerops.app/login) | Authentication entry |
+
+Latest demo evidence is also in:
+
+- [`docs/demo/vibemarketer-core-demo.mp4`](docs/demo/vibemarketer-core-demo.mp4)
+- [`docs/demo/vibemarketer-approval-boundary.mp4`](docs/demo/vibemarketer-approval-boundary.mp4)
+- [`docs/demo/vibemarketer-judge-demo.mp4`](docs/demo/vibemarketer-judge-demo.mp4)
 
 ## Architecture
 
@@ -51,21 +50,28 @@ VibeMarketer marketing state, drafts, approvals, publishing attempts, and
 reports.
 
 ```mermaid
-flowchart LR
-    founder[Founder / browser] --> web[Next.js web app - public application surface]
-    web --> auth[Supabase Auth - sign-in and sessions only]
+flowchart TD
+    user["Founder (browser)"] -->|HTTPS| web["Next.js web app (Zerops public web)"]
+    web -->|OAuth/JWT session| supabase["Supabase Auth (external)"]
 
-    subgraph zerops[Zerops project - private network]
-        web --> db[(Managed PostgreSQL - marketing state and outbox)]
-        web --> nats[(NATS JetStream - publish wake-ups)]
-        nats --> worker[Private Node.js worker - drain and execution]
-        worker --> db
-        worker --> drain[Private publishing drain]
-        drain --> web
+    subgraph zerops["Zerops project (private network)"]
+        web --> postgres["Zerops PostgreSQL<br/>marketing store + outbox"]
+        web --> nats["NATS JetStream<br/>durable publish queue"]
+        web --> worker["Private worker (TypeScript)"]
+        nats --> worker
+        worker --> postgres
+        worker --> outbox["Publish attempts & idempotency"]
     end
 
-    web --> research[Research and model providers - OpenAI - optional Firecrawl/Supermemory]
-    worker --> publish[Composio and connected provider - LinkedIn - X - Reddit]
+    web -->|brand + campaign APIs| brand["Brand / campaign adapters"]
+    web -->|AI drafting and scoring| llm["OpenAI (and optional providers)"]
+    brand -->|optional extraction/enrichment| search["Firecrawl / Supermemory (optional)"]
+    worker --> connector["Composio provider execute (server-only)"]
+    connector --> reddit["Reddit"]
+    connector --> linkedin["LinkedIn"]
+    connector --> x["X (formerly Twitter)"]
+
+    outbox -->|audit + status| web
 ```
 
 ### Why Supabase is still in the repository
